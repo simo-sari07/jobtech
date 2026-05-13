@@ -1,0 +1,157 @@
+# =========================================================
+#  JobTech Solutions — Root .gitignore
+#  Security Best Practices & Development Hygiene
+# =========================================================
+
+# ─── Environment & Secrets (CRITICAL SECURITY) ───────────
+# Never commit actual secret values. Use .env.example for templates.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.*
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Private Keys & Certificates
+*.pem
+*.key
+*.pub
+*.cert
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ecdsa
+id_ed25519
+
+# Cloud & Infrastructure Secrets
+credentials.json
+sa-key.json
+*.tfvars
+.terraform/
+.aws/
+.gcloud/
+
+# ─── Python / Django ────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+{{ ... }}
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.log
+pip-delete-this-directory.txt
+
+# Django Specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+db.sqlite3-[0-9][0-9][0-9][0-9][0-1][0-9][0-3][0-9]*
+media/
+staticfiles/
+.pytest_cache/
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.orig
+*.bak
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# ─── Node.js / Frontend ─────────────────────────────────
+node_modules/
+frontend/node_modules/
+jspm_packages/
+.npm
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_daemon/
+.rts2_cache_umd/
+.rts2_cache_cjs/
+.rts2_cache_es/
+
+# Build Outputs
+dist/
+frontend/dist/
+build/
+.next/
+out/
+.svelte-kit/
+.vercel/
+
+# ─── IDE & Editor ───────────────────────────────────────
+# Standard VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.history/
+*.code-workspace
+
+# IntelliJ / JetBrains
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Other Editors
+*~
+*.swp
+*.swo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# ─── Logs ───────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ─── Docker ─────────────────────────────────────────────
+.docker-compose.override.yml
+docker-compose.override.yml
+
+# ─── Miscellaneous ───────────────────────────────────────
+.tmp/
+temp/
+backup/
+*.bak
+*.sql
+*.dump
