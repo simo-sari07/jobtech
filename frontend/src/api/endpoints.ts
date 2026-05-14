@@ -9,6 +9,7 @@ export const AUTH_ENDPOINTS = {
   REGISTER:      `${API_BASE}/auth/register/`,
   LOGOUT:        `${API_BASE}/auth/logout/`,
   ME:            `${API_BASE}/auth/me/`,
+  ME_AVATAR:     `${API_BASE}/auth/me/avatar/`,
   TOKEN_REFRESH: `${API_BASE}/auth/token/refresh/`,
 } as const
 
