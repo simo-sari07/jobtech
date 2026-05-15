@@ -25,8 +25,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Count, Q, QuerySet
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from apps.users.models import User, UserAuditLog
-from apps.users.services import audit_service
+from ..models import User, UserAuditLog
+from . import audit_service
 
 logger = logging.getLogger(__name__)
 

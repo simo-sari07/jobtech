@@ -4,8 +4,8 @@ Views call these functions and stay thin.
 """
 from django.db import transaction
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from apps.jobs.models import Job
-from apps.users.models import User
+from ..models import Job
+from ...users.models import User
 
 
 # ── Valid status transitions ──────────────────────────────────────────────────
@@ -66,7 +66,7 @@ def update_job(job: Job, user: User, validated_data: dict) -> Job:
 
 def _reject_pending_applications(job: Job) -> None:
     """Auto-reject any pending/in_review applications when a job is closed."""
-    from apps.applications.models import Application
+    from ...applications.models import Application
     job.applications.filter(
         status__in=[Application.Status.PENDING, Application.Status.IN_REVIEW]
     ).update(status=Application.Status.REJECTED)

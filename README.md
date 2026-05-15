@@ -7,7 +7,7 @@ A full-stack job board and applicant tracking system built with Django REST Fram
 | Layer | Technology |
 |-------|-----------|
 | **Backend** | Django 4.2, Django REST Framework, SimpleJWT |
-| **Frontend** | React 19, TypeScript, Vite, TailwindCSS 4, Zustand, React Query |
+| **Frontend** | React 19, TypeScript, Vite, TailwindCSS 4
 | **Database** | MySQL (via PyMySQL) |
 | **Cache / Queue** | Redis, Celery |
 | **Auth** | JWT with httpOnly refresh cookie |

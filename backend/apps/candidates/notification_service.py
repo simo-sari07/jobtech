@@ -10,7 +10,7 @@ def notify(user, notif_type: str, message: str, related_url: str = None):
     """
     try:
         # Lazy import — avoids circular import with apps.candidates.models
-        from apps.candidates.models import Notification
+        from .models import Notification
         Notification.objects.create(
             user=user,
             type=notif_type,

@@ -64,7 +64,7 @@ def _build_from_ai_scores(offer_id: int) -> list:
     Fallback: build candidate_summaries from AI scores when no interviews exist.
     Returns an empty list if no scored applications exist.
     """
-    from apps.applications.models import Application
+    from ...applications.models import Application
     applications = (
         Application.objects
         .filter(job_id=offer_id, ai_score__isnull=False)
@@ -108,8 +108,8 @@ def generate_debrief_report(offer_id: int) -> bytes:
         ValueError  — If neither interviews nor scored applications exist.
         ImportError — If WeasyPrint is not installed.
     """
-    from apps.interviews.models import Interview
-    from apps.jobs.models import Job
+    from ...interviews.models import Interview
+    from ...jobs.models import Job
 
     # ── 1. Validate the offer exists ─────────────────────────────────────────
     try:

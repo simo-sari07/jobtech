@@ -27,7 +27,7 @@ from rest_framework.exceptions import (
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from apps.users.models import User
+from ..models import User
 
 logger = logging.getLogger(__name__)
 

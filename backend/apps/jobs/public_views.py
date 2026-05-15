@@ -9,8 +9,8 @@ from rest_framework import generics, filters
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.jobs.models import Job
-from apps.jobs.serializers import PublicJobOfferSerializer
+from .models import Job
+from .serializers import PublicJobOfferSerializer
 
 
 class PublicJobListView(generics.ListAPIView):

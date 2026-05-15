@@ -77,9 +77,9 @@ class AIPipelineView(APIView):
     permission_classes = [IsRecruiter]
 
     def get(self, request):
-        from apps.applications.models import Application
-        from apps.jobs.models import Job
-        from apps.applications.serializers import ApplicationListSerializer
+        from ..applications.models import Application
+        from ..jobs.models import Job
+        from ..applications.serializers import ApplicationListSerializer
 
         # ── 1. Validate offer_id param ────────────────────────────────────────
         offer_id = request.query_params.get('offer_id')
@@ -161,7 +161,7 @@ class OfferListView(APIView):
     permission_classes = [IsRecruiter]
 
     def get(self, request):
-        from apps.jobs.models import Job
+        from ..jobs.models import Job
         from django.db.models import Count
 
         offers = (
@@ -186,8 +186,8 @@ class ProcessOfferView(APIView):
     permission_classes = [IsRecruiter]
 
     def post(self, request):
-        from apps.applications.models import Application
-        from apps.ai_engine.tasks import parse_cv_task, score_candidate_task
+        from ..applications.models import Application
+        from .tasks import parse_cv_task, score_candidate_task
 
         offer_id = request.data.get('offer_id')
         if not offer_id:
@@ -233,7 +233,7 @@ class CandidateScoreView(APIView):
     permission_classes = [IsRecruiter]
 
     def get(self, request, application_id):
-        from apps.applications.models import Application
+        from ..applications.models import Application
 
         try:
             application = (
@@ -279,7 +279,7 @@ class CandidateScoreRetryView(APIView):
     permission_classes = [IsRecruiter]
 
     def post(self, request, application_id):
-        from apps.applications.models import Application
+        from ..applications.models import Application
         from django.db import transaction
 
         try:
@@ -298,7 +298,7 @@ class CandidateScoreRetryView(APIView):
 
         # Re-trigger the pipeline
         from django.conf import settings as django_settings
-        from apps.ai_engine.tasks import parse_cv_task
+        from .tasks import parse_cv_task
 
         eager = getattr(django_settings, 'CELERY_TASK_ALWAYS_EAGER', False)
         if eager:
@@ -329,7 +329,7 @@ class GenerateReportView(APIView):
     permission_classes = [IsRecruiter]
 
     def post(self, request, offer_id):
-        from apps.ai_engine.services.report_gen import generate_debrief_report
+        from .services.report_gen import generate_debrief_report
 
         try:
             pdf_bytes = generate_debrief_report(offer_id)

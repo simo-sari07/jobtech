@@ -4,10 +4,10 @@ Views are thin and only call these functions.
 """
 from django.db import transaction
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from apps.applications.models import Application
-from apps.jobs.models import Job
-from apps.users.models import User
-from apps.candidates.notification_service import notify
+from ..models import Application
+from ...jobs.models import Job
+from ...users.models import User
+from ...candidates.notification_service import notify
 
 
 # ── Valid status transitions ──────────────────────────────────────────────────
@@ -61,7 +61,7 @@ def submit_application(candidate: User, validated_data: dict) -> Application:
     # Trigger AI CV parsing pipeline (on_commit ensures the row is committed first)
     def _trigger_ai():
         try:
-            from apps.ai_engine.tasks import parse_cv_task
+            from ...ai_engine.tasks import parse_cv_task
             parse_cv_task.apply_async(args=[application.pk], queue='ai')
         except Exception as exc:
             import logging

@@ -33,10 +33,10 @@ class Command(BaseCommand):
         logging.getLogger('httpcore').setLevel(logging.WARNING)
         logging.getLogger('openai').setLevel(logging.WARNING)
 
-        from apps.applications.models import Application
-        from apps.ai_engine.models import CandidateScore
-        from apps.ai_engine.services.cv_parser import parse_cv
-        from apps.ai_engine.services.matcher import score_candidate
+        from ....applications.models import Application
+        from ...models import CandidateScore
+        from ...services.cv_parser import parse_cv
+        from ...services.matcher import score_candidate
         from decimal import Decimal
         from django.conf import settings
 

@@ -20,10 +20,10 @@ class Command(BaseCommand):
         parser.add_argument('--app', type=int, default=None, help='Single application ID')
 
     def handle(self, *args, **options):
-        from apps.applications.models import Application
-        from apps.ai_engine.services.cv_parser import parse_cv
-        from apps.ai_engine.services.matcher import score_candidate
-        from apps.ai_engine.models import CandidateScore
+        from ....applications.models import Application
+        from ...services.cv_parser import parse_cv
+        from ...services.matcher import score_candidate
+        from ...models import CandidateScore
         from decimal import Decimal
         from django.conf import settings
 

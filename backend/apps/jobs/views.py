@@ -6,22 +6,22 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.jobs.models import Job, Skill
-from apps.jobs.serializers import (
+from .models import Job, Skill
+from .serializers import (
     SkillSerializer,
     JobListSerializer,
     JobDetailSerializer,
     JobCreateSerializer,
 )
-from apps.jobs.filters import JobFilter
-from apps.jobs.services.job_service import (
+from .filters import JobFilter
+from .services.job_service import (
     create_job,
     update_job,
     get_jobs_queryset,
     delete_job,
 )
 from core.permissions import IsRecruiter, IsAdmin
-from apps.users.models import User
+from ..users.models import User
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):

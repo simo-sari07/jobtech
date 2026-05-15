@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 def _get_application(application_id: int):
     """Load an Application or raise Application.DoesNotExist."""
-    from apps.applications.models import Application
+    from ..applications.models import Application
     return Application.objects.select_related('job', 'candidate').get(pk=application_id)
 
 
@@ -70,7 +70,7 @@ def parse_cv_task(self, application_id: int) -> None:
     """
     logger.info('[parse_cv_task] Starting for application #%d', application_id)
 
-    from apps.ai_engine.services.cv_parser import parse_cv
+    from .services.cv_parser import parse_cv
 
     try:
         application = _get_application(application_id)
@@ -119,8 +119,8 @@ def score_candidate_task(self, application_id: int) -> None:
     """
     logger.info('[score_candidate_task] Starting for application #%d', application_id)
 
-    from apps.ai_engine.models import CandidateScore
-    from apps.ai_engine.services.matcher import score_candidate
+    from .models import CandidateScore
+    from .services.matcher import score_candidate
 
     # Guard: skip if already scored
     if CandidateScore.objects.filter(application_id=application_id).exists():
@@ -178,7 +178,7 @@ def retry_stalled_tasks() -> int:
     """
     from django.utils import timezone
     from datetime import timedelta
-    from apps.applications.models import Application
+    from ..applications.models import Application
 
     cutoff = timezone.now() - timedelta(minutes=30)
     stalled = Application.objects.filter(

@@ -19,7 +19,7 @@ def auto_process_new_application(sender, instance, created, **kwargs):
 
     eager = getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False)
 
-    from apps.ai_engine.tasks import parse_cv_task
+    from .tasks import parse_cv_task
 
     if eager:
         logger.info('[signal] Auto-processing application #%d (eager mode)', instance.pk)

@@ -4,7 +4,7 @@ Jobs serializers — validation layer only, zero business logic.
 from django.conf import settings
 from django.utils import timezone
 from rest_framework import serializers
-from apps.jobs.models import Job, Skill
+from .models import Job, Skill
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class JobListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for list views."""
     skills = SkillSerializer(many=True, read_only=True)
     created_by_name = serializers.SerializerMethodField()
-    application_count = serializers.IntegerField(read_only=True)
+    application_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Job
@@ -54,6 +54,11 @@ class JobListSerializer(serializers.ModelSerializer):
         if obj.created_by:
             return obj.created_by.get_full_name()
         return None
+
+    def get_application_count(self, obj) -> int:
+        if hasattr(obj, 'application_count'):
+            return obj.application_count
+        return obj.applications.count()
 
 
 class JobDetailSerializer(serializers.ModelSerializer):

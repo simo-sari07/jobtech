@@ -2,8 +2,8 @@
 Candidates app serializers.
 """
 from rest_framework import serializers
-from apps.candidates.models import CandidateProfile, SavedJob, Notification
-from apps.jobs.serializers import JobListSerializer
+from .models import CandidateProfile, SavedJob, Notification
+from ..jobs.serializers import JobListSerializer
 
 
 class CandidateProfileSerializer(serializers.ModelSerializer):

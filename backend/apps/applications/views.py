@@ -7,21 +7,21 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.applications.models import Application
-from apps.applications.serializers import (
+from .models import Application
+from .serializers import (
     ApplicationCreateSerializer,
     ApplicationListSerializer,
     ApplicationCandidateSerializer,
     ApplicationStatusSerializer,
 )
-from apps.applications.filters import ApplicationFilter
-from apps.applications.services.application_service import (
+from .filters import ApplicationFilter
+from .services.application_service import (
     submit_application,
     update_application_status,
     get_applications_queryset,
 )
 from core.permissions import IsRecruiter, IsCandidate
-from apps.users.models import User
+from ..users.models import User
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):

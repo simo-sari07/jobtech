@@ -2,8 +2,8 @@
 Applications serializers — validation only, zero business logic.
 """
 from rest_framework import serializers
-from apps.applications.models import Application
-from apps.jobs.serializers import JobListSerializer
+from .models import Application
+from ..jobs.serializers import JobListSerializer, PublicJobOfferSerializer
 
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
@@ -78,7 +78,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
 
 class ApplicationCandidateSerializer(serializers.ModelSerializer):
     """Read-only view for candidates — limited fields, no internal notes."""
-    job = JobListSerializer(read_only=True)
+    job = PublicJobOfferSerializer(read_only=True)
     cv_url = serializers.SerializerMethodField()
 
     class Meta:

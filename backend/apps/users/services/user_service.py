@@ -3,7 +3,7 @@ User Management service.
 Handles administrative business logic for users.
 """
 from django.db.models import QuerySet
-from apps.users.models import User
+from ..models import User
 
 def list_users() -> QuerySet[User]:
     """Return a queryset of all users."""
