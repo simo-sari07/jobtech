@@ -58,6 +58,19 @@ def submit_application(candidate: User, validated_data: dict) -> Application:
         related_url='/dashboard/candidate/applications',
     )
 
+    # Trigger AI CV parsing pipeline (on_commit ensures the row is committed first)
+    def _trigger_ai():
+        try:
+            from apps.ai_engine.tasks import parse_cv_task
+            parse_cv_task.apply_async(args=[application.pk], queue='ai')
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning(
+                'Could not trigger AI pipeline for application #%d: %s', application.pk, exc
+            )
+
+    transaction.on_commit(_trigger_ai)
+
     return application
 
 

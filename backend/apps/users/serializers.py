@@ -7,7 +7,7 @@ Responsibilities:
 - Serialization of safe output data.
 """
 from rest_framework import serializers
-from apps.users.models import User
+from .models import User
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -426,7 +426,7 @@ class UserAuditLogSerializer(serializers.ModelSerializer):
     subject_display = serializers.SerializerMethodField()
 
     class Meta:
-        from apps.users.models import UserAuditLog
+        from .models import UserAuditLog
         model  = UserAuditLog
         fields = [
             'id',
@@ -448,3 +448,35 @@ class UserAuditLogSerializer(serializers.ModelSerializer):
         if obj.subject is None:
             return None  # Subject account was deleted
         return f'{obj.subject.get_full_name()} <{obj.subject.email}>'
+
+
+class SelfProfileUpdateSerializer(serializers.Serializer):
+    """
+    Validates a user's request to update their own profile.
+
+    Fields:
+        first_name — optional
+        last_name  — optional
+        phone      — optional (normalised to None if empty)
+    """
+    first_name = serializers.CharField(
+        max_length=100,
+        trim_whitespace=True,
+        required=False,
+    )
+    last_name  = serializers.CharField(
+        max_length=100,
+        trim_whitespace=True,
+        required=False,
+    )
+    phone      = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+
+    def validate_phone(self, value) -> str | None:
+        if not value:
+            return None
+        return value.strip()

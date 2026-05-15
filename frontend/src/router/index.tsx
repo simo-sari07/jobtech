@@ -54,6 +54,7 @@ const SavedJobsPage          = lazy(() => import('@/pages/dashboard/candidate/Sa
 const NotificationsPage     = lazy(() => import('@/pages/dashboard/candidate/NotificationsPage'))
 const InterviewsListPage    = lazy(() => import('@/pages/interviews/InterviewsListPage'))
 const EvaluationPage        = lazy(() => import('@/pages/interviews/EvaluationPage'))
+const AIPipelinePage        = lazy(() => import('@/features/ai/components/AIPipelinePage'))
 
 // ── Suspense wrapper ─────────────────────────────────────────────────────────
 const Loader = () => (
@@ -212,6 +213,15 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: S(<InterviewsListPage />) },
               { path: ':id/evaluate', element: S(<EvaluationPage />) },
+            ],
+          },
+
+          // ── /dashboard/ai (AI Pipeline — staff only) ─────────────────
+          {
+            path: 'ai',
+            element: <ProtectedRoute allowedRoles={['admin', 'hr_manager', 'recruiter']} />,
+            children: [
+              { index: true, element: S(<AIPipelinePage />) },
             ],
           },
 

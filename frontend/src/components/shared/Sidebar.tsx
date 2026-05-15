@@ -17,6 +17,7 @@ import {
   Heart,
   User as UserIcon,
   Calendar,
+  Zap,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
@@ -37,6 +38,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: 'Job Offers',    to: '/dashboard/jobs',         icon: <Briefcase size={18} /> },
     { label: 'Applications',  to: '/dashboard/applications', icon: <FileText size={18} /> },
     { label: 'Interviews',    to: '/dashboard/interviews',   icon: <Calendar size={18} /> },
+    { label: 'AI Pipeline',   to: '/dashboard/ai',           icon: <Zap size={18} /> },
     { label: 'Post a Job',    to: '/dashboard/jobs/create',  icon: <PlusCircle size={18} /> },
     { label: 'Users',         to: '/dashboard/users',        icon: <Users size={18} /> },
     { label: 'Analytics',     to: '/dashboard/admin',        icon: <BarChart3 size={18} /> },
@@ -48,6 +50,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: 'Job Offers',    to: '/dashboard/jobs',         icon: <Briefcase size={18} /> },
     { label: 'Applications',  to: '/dashboard/applications', icon: <FileText size={18} /> },
     { label: 'Interviews',    to: '/dashboard/interviews',   icon: <Calendar size={18} /> },
+    { label: 'AI Pipeline',   to: '/dashboard/ai',           icon: <Zap size={18} /> },
     { label: 'Post a Job',    to: '/dashboard/jobs/create',  icon: <PlusCircle size={18} /> },
     { label: 'Reports',       to: '/dashboard/hr',           icon: <BarChart3 size={18} /> },
   ],
@@ -58,6 +61,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: 'Job Offers',    to: '/dashboard/jobs',         icon: <Briefcase size={18} /> },
     { label: 'Applications',  to: '/dashboard/applications', icon: <FileText size={18} /> },
     { label: 'Interviews',    to: '/dashboard/interviews',   icon: <Calendar size={18} /> },
+    { label: 'AI Pipeline',   to: '/dashboard/ai',           icon: <Zap size={18} /> },
     { label: 'Post a Job',    to: '/dashboard/jobs/create',  icon: <PlusCircle size={18} /> },
   ],
 

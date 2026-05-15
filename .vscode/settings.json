@@ -1,0 +1,19 @@
+{
+    "python.defaultInterpreterPath": "C:\\Users\\sarim\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "python.analysis.extraPaths": [
+        "c:\\Users\\sarim\\Documents\\Projects\\jobtech\\backend",
+        "c:\\Users\\sarim\\Documents\\Projects\\jobtech\\backend\\apps",
+        "C:\\Users\\sarim\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages"
+    ],
+    "python.autoComplete.extraPaths": [
+        "c:\\Users\\sarim\\Documents\\Projects\\jobtech\\backend",
+        "c:\\Users\\sarim\\Documents\\Projects\\jobtech\\backend\\apps"
+    ],
+    "python.envFile": "c:\\Users\\sarim\\Documents\\Projects\\jobtech\\backend\\.env",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.useLibraryCodeForTypes": true,
+    "python.analysis.stubPath": "c:\\Users\\sarim\\Documents\\Projects\\jobtech\\backend",
+    // Pyrefly type-checker — must point to the same interpreter as python.defaultInterpreterPath
+    "pyrefly.pythonInterpreter": "C:\\Users\\sarim\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe"
+}

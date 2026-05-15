@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/v1/applications/', include('apps.applications.urls')),
     path('api/v1/candidates/', include('apps.candidates.urls')),
     path('api/v1/interviews/', include('apps.interviews.urls')),
+    path('api/v1/ai/',         include('apps.ai_engine.urls')),
     path('api/v1/public/', include('apps.jobs.public_urls')),  # ← Public (no auth)
 ]
 

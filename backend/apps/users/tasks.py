@@ -39,7 +39,7 @@ def flush_presence_to_db():
 
     Returns the number of users updated (useful for monitoring).
     """
-    from apps.users.models import User
+    from .models import User
 
     client = _get_redis()
     if client is None:
@@ -88,7 +88,7 @@ def cleanup_stale_presence():
       flush_presence_to_db ran at t=0, cleanup runs at t=5:01,
       but user made a request at t=4:55 (key still exists, DB not yet flushed).
     """
-    from apps.users.models import User
+    from .models import User
 
     cutoff = timezone.now() - timedelta(minutes=6)
     count = User.objects.filter(

@@ -21,20 +21,23 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
-from apps.users import services as auth_service
-from apps.users.serializers import (
+
+from .serializers import (
     RegisterSerializer,
     LoginSerializer,
     UserProfileSerializer,
     SelfPasswordChangeSerializer,
+    SelfProfileUpdateSerializer,
 )
-from apps.users.throttles import LoginRateThrottle
-from apps.users.services.auth_service import (
+from .throttles import LoginRateThrottle
+from .services.auth_service import (
     register_user,
     authenticate_user,
     logout_user,
     get_user_profile,
     change_own_password,
+    update_own_profile,
+    update_own_avatar,
 )
 
 logger = logging.getLogger(__name__)
@@ -189,20 +192,83 @@ class MeView(APIView):
         )
 
     def patch(self, request):
-        serializer = SelfPasswordChangeSerializer(
+        """
+        Routes the request to either password change or profile update.
+        """
+        # --- 1. Password Change Path ---
+        if 'current_password' in request.data:
+            serializer = SelfPasswordChangeSerializer(
+                data=request.data,
+                context={'user': request.user},
+            )
+            serializer.is_valid(raise_exception=True)
+
+            change_own_password(
+                user=request.user,
+                current_password=serializer.validated_data['current_password'],
+                new_password=serializer.validated_data['new_password'],
+            )
+            return Response(
+                {'success': True, 'message': 'Password changed successfully.'},
+                status=status.HTTP_200_OK,
+            )
+
+        # --- 2. Profile Update Path ---
+        serializer = SelfProfileUpdateSerializer(
             data=request.data,
             context={'user': request.user},
         )
         serializer.is_valid(raise_exception=True)
 
-        change_own_password(
+        user = update_own_profile(
             user=request.user,
-            current_password=serializer.validated_data['current_password'],
-            new_password=serializer.validated_data['new_password'],
+            validated_data=serializer.validated_data,
         )
 
+        profile = UserProfileSerializer(user, context={'request': request})
         return Response(
-            {'success': True, 'message': 'Password changed successfully.'},
+            {
+                'success': True,
+                'message': 'Profile updated successfully.',
+                'data': profile.data
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class MeAvatarView(APIView):
+    """
+    POST /api/v1/auth/me/avatar/
+    Uploads a new avatar image for the authenticated user.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if 'avatar' not in request.FILES:
+            return Response(
+                {'success': False, 'error': {'message': 'No avatar file provided.'}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        avatar_file = request.FILES['avatar']
+        # Simple size check (5MB)
+        if avatar_file.size > 5 * 1024 * 1024:
+             return Response(
+                {'success': False, 'error': {'message': 'Image size exceeds 5MB limit.'}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        path = update_own_avatar(request.user, avatar_file)
+        
+        # Build full URL if possible
+        avatar_url = request.build_absolute_uri(settings.MEDIA_URL + path)
+
+        return Response(
+            {
+                'success': True,
+                'message': 'Avatar updated successfully.',
+                'data': {'avatar_url': avatar_url}
+            },
             status=status.HTTP_200_OK,
         )
 

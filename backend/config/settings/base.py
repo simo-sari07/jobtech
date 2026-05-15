@@ -39,6 +39,7 @@ LOCAL_APPS = [
     'apps.applications',
     'apps.candidates',
     'apps.interviews',
+    'apps.ai_engine',
     'core',
 ]
 
@@ -134,6 +135,32 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = CV_MAX_UPLOAD_MB * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ─── OpenAI AI Engine ─────────────────────────────────────────────────────────
+OPENAI_API_KEY   = config('OPENAI_API_KEY', default='')
+AI_MODEL_VERSION = '1.0.0'   # Bump when scoring logic changes — for audit trail
+AI_MAX_CV_WORDS  = 4000      # Truncate CVs before sending to OpenAI
+AI_CELERY_QUEUE  = 'ai'
+
+# ── Per-task model strategy ───────────────────────────────────────────────────
+# Switch any model via .env — zero business logic changes required.
+#
+#  CV_PARSE_MODEL      → fast & cheap extraction    → gpt-4.1-mini
+#  ANALYSIS_MODEL      → semantic reasoning         → gpt-4.1
+#  REPORT_MODEL        → comparative narrative      → gpt-4.1
+#
+# Future: swap any value to gpt-5 / a local model without touching services.
+OPENAI_CV_PARSE_MODEL  = config('OPENAI_CV_PARSE_MODEL',  default='gpt-4.1-mini')
+OPENAI_ANALYSIS_MODEL  = config('OPENAI_ANALYSIS_MODEL',  default='gpt-4.1')
+OPENAI_REPORT_MODEL    = config('OPENAI_REPORT_MODEL',    default='gpt-4.1')
+
+# Score weights — must sum to 1.0
+AI_SCORE_WEIGHTS = {
+    'skills_match':     0.35,
+    'experience_match': 0.20,
+    'keyword_score':    0.20,
+    'profile_fit':      0.25,
+}
+
 # ─── Company / Public Surface ─────────────────────────────────────────────────
 COMPANY_NAME = config('COMPANY_NAME', default='JobTech Solutions')
 HIDE_SALARY  = config('HIDE_SALARY', default=False, cast=bool)
@@ -216,19 +243,29 @@ CORS_ALLOW_HEADERS = [
 # ─── Celery ──────────────────────────────────────────────────────────────────
 from celery.schedules import crontab
 
-CELERY_BROKER_URL       = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
-CELERY_RESULT_BACKEND   = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
-CELERY_ACCEPT_CONTENT   = ['json']
-CELERY_TASK_SERIALIZER  = 'json'
+CELERY_BROKER_URL        = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND    = config('REDIS_URL', default='redis://127.0.0.1:6379/0')
+CELERY_ACCEPT_CONTENT    = ['json']
+CELERY_TASK_SERIALIZER   = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE         = 'UTC'
+CELERY_TIMEZONE          = 'UTC'
+
+# In development (DEBUG=True), run tasks synchronously — no Redis/broker needed.
+# In production, set DEBUG=False and start a real Celery worker.
+CELERY_TASK_ALWAYS_EAGER       = DEBUG
+CELERY_TASK_EAGER_PROPAGATES   = DEBUG
 
 # Celery Beat — periodic tasks
 CELERY_BEAT_SCHEDULE = {
     # Runs every hour — finds interviews within the next 24h and sends reminders
     'send-interview-reminders-hourly': {
         'task':     'interviews.send_interview_reminders',
-        'schedule': crontab(minute=0, hour='*'),  # top of every hour
+        'schedule': crontab(minute=0, hour='*'),
+    },
+    # Re-queue any stalled AI tasks older than 30min
+    'retry-stalled-ai-tasks': {
+        'task':     'ai_engine.retry_stalled_tasks',
+        'schedule': crontab(minute='*/30'),
     },
 }
 

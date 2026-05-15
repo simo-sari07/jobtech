@@ -60,8 +60,9 @@ class Application(models.Model):
     cover_letter = models.TextField(blank=True, null=True)
 
     # ── Internal recruiter fields ─────────────────────────────────────────────
-    notes    = models.TextField(blank=True, null=True)
-    ai_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    notes         = models.TextField(blank=True, null=True)
+    ai_score      = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    ai_parsed_data = models.JSONField(null=True, blank=True)   # Populated by AI CV parser
 
     # ── Timestamps ───────────────────────────────────────────────────────────
     created_at = models.DateTimeField(auto_now_add=True)

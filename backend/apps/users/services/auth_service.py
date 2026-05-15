@@ -10,9 +10,13 @@ Security principles applied:
 - Token blacklisting is handled by SimpleJWT's token_blacklist app.
 - Exceptions raised here bubble up to the custom exception handler.
 """
+import os
+import uuid
 import logging
 
+from django.conf import settings
 from django.contrib.auth import password_validation
+from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status
 from rest_framework.exceptions import (
@@ -178,6 +182,62 @@ def change_own_password(user: User, current_password: str, new_password: str) ->
     user.save(update_fields=['password'])
 
     logger.info(f'User {user.id} changed their own password')
+
+
+def update_own_profile(user: User, validated_data: dict) -> User:
+    """
+    Update the authenticated user's own profile fields.
+    """
+    fields_to_update = ['first_name', 'last_name', 'phone']
+    changed = False
+
+    for field in fields_to_update:
+        if field in validated_data:
+            value = validated_data[field]
+            if getattr(user, field) != value:
+                setattr(user, field, value)
+                changed = True
+
+    if changed:
+        user.save()
+        logger.info(f'User {user.id} updated their own profile')
+
+    return user
+
+
+def update_own_avatar(user: User, avatar_file) -> str:
+    """
+    Save a new avatar image for the user.
+    File is stored as: avatars/<uuid>.<ext>
+    """
+    # Create directory if it doesn't exist
+    avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+    if not os.path.exists(avatar_dir):
+        os.makedirs(avatar_dir, exist_ok=True)
+
+    # Generate unique filename
+    ext = os.path.splitext(avatar_file.name)[1]
+    filename = f'{uuid.uuid4()}{ext}'
+    file_path = os.path.join('avatars', filename)
+
+    # Save file
+    path = default_storage.save(file_path, avatar_file)
+
+    # Delete old avatar if it exists and is not the default
+    if user.avatar and os.path.exists(os.path.join(settings.MEDIA_ROOT, user.avatar)):
+        try:
+            os.remove(os.path.join(settings.MEDIA_ROOT, user.avatar))
+        except Exception as e:
+            logger.warning(f"Could not delete old avatar: {e}")
+
+    # Update user model
+    user.avatar = path
+    user.save(update_fields=['avatar'])
+
+    logger.info(f'User {user.id} updated their avatar: {path}')
+
+    # Return the full URL or relative path based on model property
+    return path
 
 
 # ─── Private helpers ──────────────────────────────────────────────────────────

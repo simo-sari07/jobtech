@@ -33,18 +33,26 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
 
 class ApplicationListSerializer(serializers.ModelSerializer):
     """Full list view for recruiters/HR — includes candidate info and job title."""
-    candidate_name  = serializers.SerializerMethodField()
-    candidate_email = serializers.SerializerMethodField()
-    job_title       = serializers.SerializerMethodField()
-    cv_url          = serializers.SerializerMethodField()
+    candidate_name   = serializers.SerializerMethodField()
+    candidate_email  = serializers.SerializerMethodField()
+    candidate_id     = serializers.SerializerMethodField()
+    job_title        = serializers.SerializerMethodField()
+    job_id           = serializers.SerializerMethodField()
+    job_location     = serializers.SerializerMethodField()
+    cv_url           = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
         fields = [
-            'id', 'status', 'candidate_name', 'candidate_email',
-            'job_title', 'cv_url', 'ai_score', 'cover_letter',
+            'id', 'status',
+            'candidate_id', 'candidate_name', 'candidate_email',
+            'job_id', 'job_title', 'job_location',
+            'cv_url', 'ai_score', 'cover_letter',
             'notes', 'created_at', 'updated_at',
         ]
+
+    def get_candidate_id(self, obj) -> int:
+        return obj.candidate_id
 
     def get_candidate_name(self, obj) -> str:
         return obj.candidate.get_full_name()
@@ -52,8 +60,14 @@ class ApplicationListSerializer(serializers.ModelSerializer):
     def get_candidate_email(self, obj) -> str:
         return obj.candidate.email
 
+    def get_job_id(self, obj) -> int:
+        return obj.job_id
+
     def get_job_title(self, obj) -> str:
         return obj.job.title
+
+    def get_job_location(self, obj) -> str:
+        return obj.job.location or ''
 
     def get_cv_url(self, obj) -> str | None:
         request = self.context.get('request')

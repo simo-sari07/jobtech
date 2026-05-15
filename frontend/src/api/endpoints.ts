@@ -57,3 +57,15 @@ export const INTERVIEWS_ENDPOINTS = {
   EVALUATE:   (id: number | string) => `${API_BASE}/interviews/${id}/evaluate/`,
   EVALUATION: (id: number | string) => `${API_BASE}/interviews/${id}/evaluation/`,
 } as const
+
+export const AI_ENDPOINTS = {
+  /** GET ?offer_id=N&status=X&min_score=Y → ranked pipeline for one offer */
+  PIPELINE: `${API_BASE}/ai/pipeline/`,
+  /** POST { offer_id } → auto-process unscored applications for an offer */
+  PROCESS:  `${API_BASE}/ai/pipeline/process/`,
+  /** GET → lightweight offer list for the selector dropdown */
+  OFFERS:   `${API_BASE}/ai/offers/`,
+  SCORE:    (id: number | string) => `${API_BASE}/ai/scores/${id}/`,
+  RETRY:    (id: number | string) => `${API_BASE}/ai/scores/${id}/retry/`,
+  REPORT:   (id: number | string) => `${API_BASE}/ai/reports/${id}/generate/`,
+} as const
