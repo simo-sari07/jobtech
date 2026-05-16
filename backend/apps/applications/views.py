@@ -5,6 +5,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Application
@@ -32,6 +33,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     - GET mine: Candidate only (custom action)
     - PATCH status: Recruiter/HR/Admin
     """
+    parser_classes = [MultiPartParser, FormParser]
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = ApplicationFilter

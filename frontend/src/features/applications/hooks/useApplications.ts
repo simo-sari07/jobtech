@@ -30,7 +30,10 @@ export function useSubmitApplication() {
   return useMutation({
     mutationFn: (formData: FormData) =>
       applicationsApi.submit(formData).then(r => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: APP_KEYS.mine }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: APP_KEYS.mine })
+      qc.invalidateQueries({ queryKey: APP_KEYS.all })
+    },
   })
 }
 

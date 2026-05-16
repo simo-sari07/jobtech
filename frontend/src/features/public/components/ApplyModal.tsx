@@ -167,11 +167,26 @@ export default function ApplyModal({
       onSuccess?.();
       onClose();
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.error?.message ||
-        err?.response?.data?.message ||
-        "Failed to submit application. Please try again.";
-      toast.error(msg);
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+
+      // Handle DRF custom envelope: { success: false, error: { message, details } }
+      if (data?.error?.message) {
+        toast.error(data.error.message);
+      } else if (status === 400 && data?.error?.details) {
+        // Field-level validation errors — show first one
+        const details = data.error.details;
+        const firstField = Object.keys(details)[0];
+        const firstMsg = Array.isArray(details[firstField])
+          ? details[firstField][0]
+          : details[firstField];
+        toast.error(firstMsg || "Validation error. Please check your input.");
+      } else if (!err?.response) {
+        // Network error — no response received
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error("Failed to submit application. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }

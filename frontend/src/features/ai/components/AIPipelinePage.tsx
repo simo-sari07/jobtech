@@ -1,11 +1,9 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   MapPin,
   Clock,
-  Briefcase,
-  FileText,
   Calendar,
   Zap,
   ChevronDown,
@@ -21,7 +19,6 @@ import { AI_ENDPOINTS } from "@/api/endpoints";
 import ScoreRing from "../components/ScoreRing";
 import ProcessingTimeline from "../components/ProcessingTimeline";
 import AIFilters from "../components/AIFilters";
-import { useGenerateReport } from "../hooks/useGenerateReport";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -230,7 +227,7 @@ function CandidateCard({ app, index }: { app: Candidate; index: number }) {
   const score = app.ai_score != null ? Math.round(app.ai_score) : null;
   const detail = app.ai_score_detail;
   const skills = detail?.extracted_skills ?? [];
-  const report = useGenerateReport(app.job_id);
+  const navigate = useNavigate();
   const [g] = useState(GRAD[index % GRAD.length]);
 
   return (
@@ -438,6 +435,7 @@ function CandidateCard({ app, index }: { app: Candidate; index: number }) {
         }}
       >
         <button
+          onClick={() => navigate(`/dashboard/users/${app.candidate_id}`)}
           style={{
             padding: "6px 14px",
             background: "#2563eb",
@@ -450,38 +448,6 @@ function CandidateCard({ app, index }: { app: Candidate; index: number }) {
           }}
         >
           View Profile
-        </button>
-        <button
-          onClick={() => report.mutate()}
-          disabled={report.isPending}
-          style={{
-            padding: "6px 14px",
-            background: "#fff",
-            color: "#374151",
-            border: "1px solid #e5e7eb",
-            borderRadius: 7,
-            fontSize: 12,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 5,
-          }}
-        >
-          {report.isPending ? (
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                border: "2px solid #6b7280",
-                borderTopColor: "transparent",
-                borderRadius: "50%",
-                animation: "spin 0.8s linear infinite",
-              }}
-            />
-          ) : (
-            <FileText size={12} />
-          )}{" "}
-          AI Report
         </button>
       </div>
     </div>

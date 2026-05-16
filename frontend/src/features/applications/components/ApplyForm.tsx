@@ -43,7 +43,14 @@ export default function ApplyForm({ jobId, jobTitle, onSuccess, onCancel }: Prop
       toast.success('Your application was submitted!')
       onSuccess()
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to submit application.')
+      const data = err?.response?.data
+      if (data?.error?.message) {
+        toast.error(data.error.message)
+      } else if (!err?.response) {
+        toast.error('Network error. Please check your connection.')
+      } else {
+        toast.error('Failed to submit application. Please try again.')
+      }
     }
   }
 

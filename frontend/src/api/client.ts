@@ -56,12 +56,18 @@ function clearAuth(): void {
   store?.getState().clearAuth()
 }
 
-// ─── Request interceptor — attach access token ────────────────────────────────
+// ─── Request interceptor — attach access token + fix FormData Content-Type ───
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken()
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    // When sending FormData (file uploads), remove the Content-Type header
+    // so the browser sets it automatically with the correct multipart boundary.
+    // Without this, the instance default 'application/json' is sent, breaking file uploads.
+    if (config.data instanceof FormData && config.headers) {
+      config.headers.set('Content-Type', false as any)
     }
     return config
   },

@@ -43,9 +43,7 @@ export const applicationsApi = {
     apiClient.get<Application>(APPLICATIONS_ENDPOINTS.DETAIL(id)),
 
   submit: (formData: FormData) =>
-    apiClient.post<Application>(APPLICATIONS_ENDPOINTS.LIST, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    apiClient.post<Application>(APPLICATIONS_ENDPOINTS.LIST, formData),
 
   updateStatus: (id: number | string, status: string, notes?: string) =>
     apiClient.patch<Application>(APPLICATIONS_ENDPOINTS.STATUS(id), {
