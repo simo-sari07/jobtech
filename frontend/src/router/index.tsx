@@ -16,9 +16,10 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { useAuthStore } from '@/store/authStore'
 
-// ── Layouts — two completely isolated shells ─────────────────────────────────
-import PublicLayout    from '@/components/public/PublicLayout'
-import DashboardLayout from '@/components/shared/DashboardLayout'
+// ── Layouts — three completely isolated shells ──────────────────────────────
+import PublicLayout     from '@/components/public/PublicLayout'
+import DashboardLayout  from '@/components/shared/DashboardLayout'
+import CandidateLayout  from '@/layouts/CandidateLayout'
 
 // ── Route guards ─────────────────────────────────────────────────────────────
 import ProtectedRoute  from './ProtectedRoute'
@@ -72,7 +73,7 @@ function RoleRedirect() {
     admin:      '/dashboard/admin',
     hr_manager: '/dashboard/hr',
     recruiter:  '/dashboard/recruiter',
-    candidate:  '/dashboard/candidate',
+    candidate:  '/candidate/overview',    // ← candidate has its own layout
   }
   return <Navigate to={map[user.role] ?? '/login'} replace />
 }
@@ -83,7 +84,7 @@ export function getRoleHomePath(role: string): string {
     case 'admin':      return '/dashboard/admin'
     case 'hr_manager': return '/dashboard/hr'
     case 'recruiter':  return '/dashboard/recruiter'
-    case 'candidate':  return '/dashboard/candidate'
+    case 'candidate':  return '/candidate/overview'  // ← candidate portal
     default:           return '/login'
   }
 }
@@ -172,17 +173,17 @@ export const router = createBrowserRouter([
             ],
           },
 
-          // ── /dashboard/candidate ─────────────────────────────────────
+          // ── /dashboard/candidate ─ LEGACY: redirects to /candidate/overview
           {
             path: 'candidate',
             element: <ProtectedRoute allowedRoles={['candidate']} />,
             children: [
-              { index: true, element: <CandidateDashboard /> },
-              { path: 'applications', element: S(<MyApplicationsPage />) },
-              { path: 'interviews',   element: S(<InterviewsListPage />) },
-              { path: 'profile',     element: S(<CandidateProfilePage />) },
-              { path: 'saved-jobs',  element: S(<SavedJobsPage />) },
-              { path: 'notifications', element: S(<NotificationsPage />) },
+              { index: true,          element: <Navigate to="/candidate/overview" replace /> },
+              { path: 'applications', element: <Navigate to="/candidate/applications" replace /> },
+              { path: 'interviews',   element: <Navigate to="/candidate/interviews" replace /> },
+              { path: 'profile',      element: <Navigate to="/candidate/profile" replace /> },
+              { path: 'saved-jobs',   element: <Navigate to="/candidate/saved" replace /> },
+              { path: 'notifications',element: <Navigate to="/candidate/overview" replace /> },
             ],
           },
 
@@ -249,14 +250,39 @@ export const router = createBrowserRouter([
   },
 
   // ══════════════════════════════════════════════════════════════════════
-  // LEGACY PATHS — kept for backward compatibility with old links
-  // These redirect to the new /dashboard/* equivalents
+  // SURFACE 3 — CANDIDATE PORTAL  (/candidate/*)
+  // CandidateLayout: full-width topbar + horizontal tabs, NO sidebar.
+  // Completely isolated from /dashboard/*.
   // ══════════════════════════════════════════════════════════════════════
-  { path: '/admin/users',     element: <Navigate to="/dashboard/admin/users" replace /> },
-  { path: '/admin/users/:id', element: <Navigate to="/dashboard/admin/users" replace /> },
-  { path: '/applications',    element: <Navigate to="/dashboard/applications" replace /> },
-  { path: '/applications/mine', element: <Navigate to="/dashboard/candidate/applications" replace /> },
-  { path: '/jobs/create',     element: <Navigate to="/dashboard/jobs/create" replace /> },
+  {
+    path: '/candidate',
+    element: <ProtectedRoute allowedRoles={['candidate']} />,
+    children: [
+      {
+        element: <CandidateLayout />,
+        children: [
+          { index: true,              element: <Navigate to="overview" replace /> },
+          { path: 'overview',         element: <CandidateDashboard /> },
+          { path: 'jobs',             element: <JobsPage /> },
+          { path: 'applications',     element: S(<MyApplicationsPage />) },
+          { path: 'interviews',       element: S(<InterviewsListPage />) },
+          { path: 'saved',            element: S(<SavedJobsPage />) },
+          { path: 'profile',          element: S(<CandidateProfilePage />) },
+          { path: 'notifications',    element: S(<NotificationsPage />) },
+          { path: 'settings',         element: S(<SettingsPage />) },
+        ],
+      },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LEGACY PATHS — kept for backward compatibility with old links
+  // ══════════════════════════════════════════════════════════════════════
+  { path: '/admin/users',       element: <Navigate to="/dashboard/admin/users" replace /> },
+  { path: '/admin/users/:id',   element: <Navigate to="/dashboard/admin/users" replace /> },
+  { path: '/applications',      element: <Navigate to="/dashboard/applications" replace /> },
+  { path: '/applications/mine', element: <Navigate to="/candidate/applications" replace /> },
+  { path: '/jobs/create',       element: <Navigate to="/dashboard/jobs/create" replace /> },
 
   // ══════════════════════════════════════════════════════════════════════
   // 404

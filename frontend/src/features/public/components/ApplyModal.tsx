@@ -132,10 +132,18 @@ export default function ApplyModal({
       fd.append("job", String(job.id));
 
       if (cvChoice === "saved" && hasSavedCv) {
-        // Fetch the saved CV from the URL and attach it as a Blob
-        const res = await fetch(profile!.cv_url!);
-        const blob = await res.blob();
-        fd.append("cv_file", blob, "cv.pdf");
+        // Fetch the saved CV from the URL and attach it as a Blob.
+        // We must use a relative URL so the Vite proxy routes it correctly,
+        // and force content-type to application/pdf so backend validation passes.
+        const cvUrl = profile!.cv_url!;
+        const relativeUrl = cvUrl.startsWith("http")
+          ? new URL(cvUrl).pathname
+          : cvUrl;
+        const res = await fetch(relativeUrl);
+        const rawBlob = await res.blob();
+        const blob = new Blob([rawBlob], { type: "application/pdf" });
+        const filename = cvUrl.split("/").pop() ?? "cv.pdf";
+        fd.append("cv_file", blob, filename.endsWith(".pdf") ? filename : `${filename}.pdf`);
       } else if (newCvFile) {
         fd.append("cv_file", newCvFile, newCvFile.name);
       }

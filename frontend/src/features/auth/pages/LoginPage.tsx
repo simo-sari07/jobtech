@@ -42,7 +42,7 @@ export default function LoginPage() {
       const role = res.data.user.role
       const dashMap: Record<string, string> = {
         admin: '/dashboard/admin', hr_manager: '/dashboard/hr',
-        recruiter: '/dashboard/recruiter', candidate: '/dashboard/candidate',
+        recruiter: '/dashboard/recruiter', candidate: '/candidate/overview',
       }
       // Go back to where they came from, or to their dashboard
       const destination = from && from !== '/login' ? from : (dashMap[role] ?? '/dashboard')
@@ -61,37 +61,37 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* ── Left Panel — Branding ── */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-blue-600 flex-col justify-between p-12 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-slate-50 flex-col justify-between p-12 relative overflow-hidden border-r border-slate-200">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-500 rounded-full opacity-40" />
-          <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-blue-700 rounded-full opacity-40" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500 rounded-full opacity-20" />
+          <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-100 rounded-full opacity-40" />
+          <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-blue-50 rounded-full opacity-40" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white rounded-full opacity-50" />
         </div>
 
         <div className="relative z-10">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-16">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-blue-600 font-bold text-sm tracking-wider">JT</span>
-            </div>
-            <span className="text-white font-bold text-xl tracking-tight">JobTech Solutions</span>
+          <div className="flex items-center mb-16">
+            <img 
+              src="/assets/images/logo-jobtech.png" 
+              alt="JobTech" 
+              className="h-20 w-auto object-contain"
+            />
           </div>
 
           {/* Headline */}
-          <h1 className="text-4xl xl:text-5xl font-bold text-white leading-[1.15] tracking-tight mb-6">
+          <h1 className="text-4xl xl:text-5xl font-bold text-slate-900 leading-[1.15] tracking-tight mb-6">
             Streamline your<br />
-            <span className="text-blue-200">recruitment pipeline</span>
+            <span className="text-blue-600">recruitment pipeline</span>
           </h1>
-          <p className="text-blue-100 text-lg leading-relaxed mb-12 max-w-md">
+          <p className="text-slate-600 text-lg leading-relaxed mb-12 max-w-md">
             Enterprise-grade ATS platform designed for modern HR teams. Hire faster, smarter.
           </p>
 
           {/* Features */}
           <ul className="flex flex-col gap-3 mb-12">
             {FEATURES.map(f => (
-              <li key={f} className="flex items-center gap-3 text-blue-50">
-                <CheckCircle size={18} className="text-blue-300 shrink-0" />
+              <li key={f} className="flex items-center gap-3 text-slate-600">
+                <CheckCircle size={18} className="text-blue-500 shrink-0" />
                 <span className="text-sm">{f}</span>
               </li>
             ))}
@@ -102,8 +102,8 @@ export default function LoginPage() {
         <div className="relative z-10 flex gap-8">
           {STATS.map(s => (
             <div key={s.label}>
-              <p className="text-2xl font-bold text-white">{s.value}</p>
-              <p className="text-xs text-blue-200 mt-0.5">{s.label}</p>
+              <p className="text-2xl font-bold text-slate-900">{s.value}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
             </div>
           ))}
         </div>
@@ -112,12 +112,12 @@ export default function LoginPage() {
       {/* ── Right Panel — Form ── */}
       <div className="flex-1 flex items-center justify-center bg-white p-8">
         <div className="w-full max-w-sm animate-fade-up">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs">JT</span>
-            </div>
-            <span className="font-bold text-slate-900">JobTech Solutions</span>
+          <div className="flex items-center mb-10 lg:hidden">
+            <img 
+              src="/assets/images/logo-jobtech.png" 
+              alt="JobTech" 
+              className="h-14 w-auto object-contain"
+            />
           </div>
 
           <div className="mb-8">

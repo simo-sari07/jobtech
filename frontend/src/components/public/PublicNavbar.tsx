@@ -18,7 +18,7 @@ function getRoleHomePath(role: string): string {
     case 'admin':      return '/dashboard/admin'
     case 'hr_manager': return '/dashboard/hr'
     case 'recruiter':  return '/dashboard/recruiter'
-    case 'candidate':  return '/dashboard/candidate'
+    case 'candidate':  return '/candidate/overview'
     default:           return '/login'
   }
 }
@@ -58,76 +58,69 @@ export default function PublicNavbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-6 h-14">
+        <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="shrink-0 flex items-center gap-1.5 group">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-bold">JT</span>
-            </div>
-            <span className="text-gray-900 font-bold text-lg tracking-tight group-hover:text-blue-600 transition-colors">
-              JobTech
-            </span>
+          <Link to="/" className="shrink-0 flex items-center group">
+            <img 
+              src="/assets/images/logo-jobtech.png" 
+              alt="JobTech" 
+              className="h-11 w-auto object-contain transition-transform group-hover:scale-105 duration-300"
+            />
           </Link>
 
-
-
-          {/* Nav links */}
-          <nav className="hidden sm:flex items-center gap-1 text-sm">
-            <Link
-              to="/jobs"
-              className="px-3 py-1.5 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 font-medium transition-colors"
-            >
-              Browse Jobs
-            </Link>
-          </nav>
-
           {/* Right actions */}
-          <div className="flex items-center gap-2 ml-auto sm:ml-0">
+          <div className="flex items-center gap-4">
+            <nav className="hidden md:flex items-center gap-8 mr-8 text-sm font-medium">
+              <Link to="/jobs" className="text-slate-600 hover:text-blue-600 transition-colors">Browse Jobs</Link>
+              <Link to="/companies" className="text-slate-600 hover:text-blue-600 transition-colors">Companies</Link>
+              <Link to="/pricing" className="text-slate-600 hover:text-blue-600 transition-colors">Pricing</Link>
+            </nav>
+
             {!isAuthenticated && (
-              <>
+              <div className="flex items-center gap-3">
                 <Link
                   to="/login"
-                  className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                  className="px-6 py-2 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
                 >
-                  Sign in
+                  Log in
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
                 >
-                  Create account
+                  Sign up
                 </Link>
-              </>
+              </div>
             )}
 
             {isAuthenticated && user?.role === 'candidate' && (
-              <>
+              <div className="flex items-center gap-4">
                 <Link
-                  to="/dashboard/candidate/applications"
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                  to="/candidate/applications"
+                  className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                 >
-                  <FileText size={14} />
+                  <FileText size={16} />
                   My Applications
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors rounded-md hover:bg-gray-100"
+                  className="p-2 text-slate-400 hover:text-slate-900 transition-colors rounded-xl hover:bg-slate-100"
                   title="Sign out"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={20} />
                 </button>
-              </>
+              </div>
             )}
 
             {isAuthenticated && user?.role !== 'candidate' && (
               <Link
                 to={getRoleHomePath(user?.role ?? '')}
-                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-1.5 px-6 py-2 text-sm font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
               >
-                <LayoutDashboard size={14} />
+                <LayoutDashboard size={16} />
                 Dashboard
               </Link>
             )}

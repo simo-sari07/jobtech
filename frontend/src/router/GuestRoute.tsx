@@ -10,7 +10,7 @@ function getRoleHomePath(role: string): string {
     case 'admin':      return '/dashboard/admin'
     case 'hr_manager': return '/dashboard/hr'
     case 'recruiter':  return '/dashboard/recruiter'
-    case 'candidate':  return '/dashboard/candidate'
+    case 'candidate':  return '/candidate/overview'
     default:           return '/login'
   }
 }

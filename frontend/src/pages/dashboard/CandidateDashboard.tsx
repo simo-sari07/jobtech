@@ -25,9 +25,9 @@ export default function CandidateDashboard() {
   ]
 
   const quickActions = [
-    { icon: <Search size={18} />, label: 'Browse Jobs', desc: 'Explore all open positions', to: '/jobs', color: 'text-blue-600 bg-blue-50' },
-    { icon: <FileText size={18} />, label: 'My Applications', desc: 'Track your submissions', to: '/dashboard/candidate/applications', color: 'text-purple-600 bg-purple-50' },
-    { icon: <CheckCircle2 size={18} />, label: 'Profile',       desc: 'Update your information', to: '#', color: 'text-green-600 bg-green-50' },
+    { icon: <Search size={18} />, label: 'Browse Jobs', desc: 'Explore all open positions', to: '/candidate/jobs', color: 'text-blue-600 bg-blue-50' },
+    { icon: <FileText size={18} />, label: 'My Applications', desc: 'Track your submissions', to: '/candidate/applications', color: 'text-purple-600 bg-purple-50' },
+    { icon: <CheckCircle2 size={18} />, label: 'Profile',       desc: 'Update your information', to: '/candidate/profile', color: 'text-green-600 bg-green-50' },
   ]
 
 
@@ -44,7 +44,7 @@ export default function CandidateDashboard() {
           </p>
         </div>
         <Link
-          to="/jobs"
+          to="/candidate/jobs"
           className="hidden sm:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           <Search size={15} /> Browse Jobs
@@ -97,7 +97,7 @@ export default function CandidateDashboard() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-slate-900">Recent Applications</h2>
-              <Link to="/dashboard/candidate/applications" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+              <Link to="/candidate/applications" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
                 View all →
               </Link>
             </div>
@@ -106,7 +106,7 @@ export default function CandidateDashboard() {
                 <FileText size={32} className="text-slate-300 mx-auto mb-3" />
                 <p className="text-sm text-slate-500 font-medium">No applications yet</p>
                 <p className="text-xs text-slate-400 mt-1">Browse open jobs and apply today</p>
-                <Link to="/jobs" className="mt-3 inline-block text-xs text-blue-600 hover:text-blue-700 font-medium">
+                <Link to="/candidate/jobs" className="mt-3 inline-block text-xs text-blue-600 hover:text-blue-700 font-medium">
                   Browse Jobs →
                 </Link>
               </div>

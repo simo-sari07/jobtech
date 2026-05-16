@@ -7,21 +7,19 @@ import {
   Briefcase,
   FileText,
   PlusCircle,
-  Search,
   Users,
   LogOut,
   ChevronLeft,
   ChevronRight,
   Settings,
   BarChart3,
-  Heart,
-  User as UserIcon,
   Calendar,
   Zap,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
-import { ROLES, ROLE_LABELS, type Role } from "@/utils/constants";
+import { ROLES, type Role } from "@/utils/constants";
 import { logoutApi } from "@/features/auth/api";
 import toast from "react-hot-toast";
 
@@ -65,15 +63,8 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: 'Post a Job',    to: '/dashboard/jobs/create',  icon: <PlusCircle size={18} /> },
   ],
 
-  // ── Candidate ────────────────────────────────────────────────────────────
-  [ROLES.CANDIDATE]: [
-    { label: 'Overview',         to: '/dashboard/candidate',              icon: <LayoutDashboard size={18} /> },
-    { label: 'Browse Jobs',      to: '/jobs',                             icon: <Search size={18} /> },
-    { label: 'My Applications',  to: '/dashboard/candidate/applications', icon: <FileText size={18} /> },
-    { label: 'My Interviews',    to: '/dashboard/candidate/interviews',   icon: <Calendar size={18} /> },
-    { label: 'Saved Jobs',       to: '/dashboard/candidate/saved-jobs',   icon: <Heart size={18} /> },
-    { label: 'My Profile',       to: '/dashboard/candidate/profile',      icon: <UserIcon size={18} /> },
-  ],
+  // ── Candidate ─ (candidates use CandidateLayout, not this sidebar) ───────
+  [ROLES.CANDIDATE]: [],
 };
 
 
@@ -97,6 +88,7 @@ export default function Sidebar() {
   const { user, clearAuth } = useAuthStore();
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   if (!user) return null;
 
@@ -111,10 +103,17 @@ export default function Sidebar() {
     } catch {
       /* best-effort */
     }
+    
+    // 1. Clear Zustand store
     clearAuth();
+    
+    // 2. Clear React Query cache — CRITICAL to prevent data persistence
+    queryClient.clear();
+    
     toast.success("Signed out successfully");
     navigate("/login", { replace: true });
   }
+
 
   const w = sidebarCollapsed ? "w-16" : "w-64";
 
@@ -124,22 +123,14 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div
-        className={`flex items-center h-15 px-4 border-b border-slate-100 shrink-0 ${sidebarCollapsed ? "justify-center" : "gap-3"}`}
-        style={{ height: 60 }}
+        className={`flex items-center px-4 border-b border-slate-100 shrink-0 ${sidebarCollapsed ? "justify-center" : ""}`}
+        style={{ height: 64 }}
       >
-        <div className="w-8 h-8 min-w-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
-          <span className="text-white font-bold text-xs tracking-wide">JT</span>
-        </div>
-        {!sidebarCollapsed && (
-          <div className="flex flex-col min-w-0">
-            <span className="font-bold text-slate-900 text-sm leading-tight tracking-tight">
-              JobTech
-            </span>
-            <span className="text-xs text-slate-400 leading-tight">
-              Solutions
-            </span>
-          </div>
-        )}
+        <img 
+          src="/assets/images/logo-jobtech.png" 
+          alt="JobTech" 
+          className="h-11 w-auto object-contain shrink-0"
+        />
       </div>
 
       {/* User chip */}

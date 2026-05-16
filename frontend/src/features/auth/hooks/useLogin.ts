@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { loginApi } from '../api'
@@ -9,11 +9,15 @@ import { ROLES } from '@/utils/constants'
 export function useLogin() {
   const navigate   = useNavigate()
   const { setAuth } = useAuthStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (data: LoginFormData) => loginApi(data),
 
     onSuccess: (res) => {
+      // Clear any stale data from a previous user session
+      queryClient.clear()
+      
       setAuth(res.data.user, res.data.access_token)
       toast.success(`Welcome back, ${res.data.user.first_name}!`)
 
@@ -23,7 +27,7 @@ export function useLogin() {
         [ROLES.ADMIN]:      '/dashboard/admin',
         [ROLES.HR_MANAGER]: '/dashboard/hr',
         [ROLES.RECRUITER]:  '/dashboard/recruiter',
-        [ROLES.CANDIDATE]:  '/dashboard/candidate',
+        [ROLES.CANDIDATE]:  '/candidate/overview',  // ← candidate portal
       }
       navigate(redirect[role] ?? '/dashboard')
     },

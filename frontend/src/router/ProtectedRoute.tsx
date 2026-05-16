@@ -48,7 +48,7 @@ export default function ProtectedRoute({
         admin:      '/dashboard/admin',
         hr_manager: '/dashboard/hr',
         recruiter:  '/dashboard/recruiter',
-        candidate:  '/dashboard/candidate',
+        candidate:  '/candidate/overview',  // ← candidate portal (no sidebar)
       }
       return <Navigate to={dashMap[user.role] ?? '/dashboard'} replace />
     }

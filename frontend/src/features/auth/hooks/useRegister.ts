@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { registerApi } from '../api'
@@ -9,12 +9,16 @@ import { ROLES } from '@/utils/constants'
 export function useRegister() {
   const navigate    = useNavigate()
   const { setAuth } = useAuthStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({ confirm_password: _, ...data }: RegisterFormData) =>
       registerApi(data),
 
     onSuccess: (res) => {
+      // Clear any stale data from a previous session (e.g. if they were browsing as guest)
+      queryClient.clear()
+      
       setAuth(res.data.user, res.data.access_token)
       toast.success('Account created! Welcome to JobTech.')
 
@@ -23,7 +27,7 @@ export function useRegister() {
         [ROLES.ADMIN]:      '/dashboard/admin',
         [ROLES.HR_MANAGER]: '/dashboard/hr',
         [ROLES.RECRUITER]:  '/dashboard/recruiter',
-        [ROLES.CANDIDATE]:  '/dashboard/candidate',
+        [ROLES.CANDIDATE]:  '/candidate/overview',  // ← candidate portal
       }
       navigate(redirect[role] ?? '/dashboard')
     },

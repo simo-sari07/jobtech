@@ -11,13 +11,12 @@ export default function PublicFooter() {
           
           {/* Column 1: Brand & Description */}
           <div className="lg:col-span-2">
-            <Link to="/" className="inline-flex items-center gap-2 group mb-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm shadow-blue-600/20">
-                <span className="text-white text-xs font-bold">JT</span>
-              </div>
-              <span className="text-slate-900 font-bold text-xl tracking-tight group-hover:text-blue-600 transition-colors">
-                JobTech
-              </span>
+            <Link to="/" className="inline-flex items-center group mb-4">
+              <img 
+                src="/assets/images/logo-jobtech.png" 
+                alt="JobTech" 
+                className="h-13 w-auto object-contain transition-transform group-hover:scale-105"
+              />
             </Link>
             <p className="text-slate-500 text-sm leading-relaxed max-w-xs mb-6">
               The modern applicant tracking system designed to streamline your hiring process and elevate the candidate experience.
@@ -43,7 +42,7 @@ export default function PublicFooter() {
               <li><Link to="/jobs" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Browse Jobs</Link></li>
               <li><Link to="/login" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Sign in</Link></li>
               <li><Link to="/register" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Create account</Link></li>
-              <li><Link to="/dashboard/candidate/saved-jobs" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Saved Jobs</Link></li>
+              <li><Link to="/candidate/saved" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Saved Jobs</Link></li>
             </ul>
           </div>
 

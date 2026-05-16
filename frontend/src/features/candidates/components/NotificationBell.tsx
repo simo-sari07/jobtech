@@ -238,7 +238,7 @@ export default function NotificationBell() {
           {notifications.length > 0 && (
             <div className="px-4 py-2 border-t border-slate-100 text-center bg-white">
               <button
-                onClick={() => { setOpen(false); navigate('/dashboard/candidate/notifications') }}
+                onClick={() => { setOpen(false); navigate('/candidate/notifications') }}
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium"
               >
                 View all activity →
