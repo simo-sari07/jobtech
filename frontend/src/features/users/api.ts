@@ -88,6 +88,13 @@ export const usersApi = {
     client.patch<ApiResponse<UserDetail>>(USERS_ENDPOINTS.TOGGLE_ACTIVE(id)),
 
   /**
+   * DELETE /api/v1/users/<id>/
+   * Deletes a user account completely.
+   */
+  delete: (id: number) =>
+    client.delete<{ success: boolean; message: string }>(USERS_ENDPOINTS.DETAIL(id)),
+
+  /**
    * GET /api/v1/users/<id>/audit-log/
    * Paginated audit event history for a specific user.
    * Optional ?action=<action_type> filter.

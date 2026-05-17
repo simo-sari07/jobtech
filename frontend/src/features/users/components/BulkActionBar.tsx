@@ -5,7 +5,7 @@
  *   - Activate selected users
  *   - Deactivate selected users
  */
-import { UserCheck, UserX, X, CheckCircle2 } from 'lucide-react'
+import { UserCheck, UserX, X, CheckCircle2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui'
 
 interface BulkActionBarProps {
@@ -13,6 +13,7 @@ interface BulkActionBarProps {
   onClear:        () => void
   onActivate:     () => void
   onDeactivate:   () => void
+  onDelete:       () => void
   isLoading:      boolean
 }
 
@@ -24,6 +25,7 @@ export function BulkActionBar({
   onClear,
   onActivate,
   onDeactivate,
+  onDelete,
   isLoading,
 }: BulkActionBarProps) {
   if (selectedCount === 0) return null
@@ -67,6 +69,17 @@ export function BulkActionBar({
           >
             <UserX size={14} className="opacity-70 group-hover:opacity-100" />
             Restrict Access
+          </button>
+
+          <div className="w-px h-4 bg-slate-100 mx-1" />
+
+          <button
+            onClick={onDelete}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-[12px] font-bold text-slate-600 hover:text-red-700 hover:bg-red-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-transparent"
+          >
+            <Trash2 size={14} className="opacity-70 group-hover:opacity-100 text-red-500" />
+            Delete Accounts
           </button>
         </div>
       </div>

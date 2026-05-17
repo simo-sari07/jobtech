@@ -20,8 +20,8 @@ from rest_framework.views import APIView
 
 from core.pagination import StandardResultsPagination
 from core.permissions import IsAdmin
-from apps.users.models import UserAuditLog
-from apps.users.serializers import (
+from .models import UserAuditLog
+from .serializers import (
     UserListSerializer,
     UserDetailSerializer,
     UserCreateSerializer,
@@ -29,7 +29,7 @@ from apps.users.serializers import (
     PasswordChangeSerializer,
     UserAuditLogSerializer,
 )
-from apps.users.services import user_management_service
+from .services import user_management_service
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +132,7 @@ class UserDetailView(APIView):
     """
     GET   /api/v1/users/<id>/    → retrieve user detail (admin only)
     PATCH /api/v1/users/<id>/    → partial update (admin only)
+    DELETE /api/v1/users/<id>/   → delete user completely (admin only)
     """
     permission_classes = [IsAdmin]
 
@@ -170,6 +171,24 @@ class UserDetailView(APIView):
         )
 
         return _ok(UserDetailSerializer(updated_user).data)
+
+    def delete(self, request, pk: int):
+        """
+        DELETE /api/v1/users/<id>/
+        Deletes a user account completely (admin only).
+        """
+        user_management_service.delete_user(
+            user_id=pk,
+            requesting_user=request.user,
+            request=request,
+        )
+        return Response(
+            {
+                'success': True,
+                'message': 'User account deleted successfully.',
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 # ─── Password change ──────────────────────────────────────────────────────────

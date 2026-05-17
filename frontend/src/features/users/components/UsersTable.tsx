@@ -9,15 +9,13 @@
  * - Pagination is rendered by the parent — this component receives
  *   currentPage / totalPages / onPageChange so it stays reusable.
  */
-import { formatDistanceToNow } from 'date-fns'
 import {
   Users, Pencil, PowerOff, PowerCircle, ChevronLeft, ChevronRight,
-  ArrowUpDown,
+  ArrowUpDown, Trash2,
 } from 'lucide-react'
 import { EmptyState, Spinner } from '@/components/ui'
 import { RoleBadge } from './RoleBadge'
 import { StatusBadge } from './StatusBadge'
-import { OnlineStatusDot } from './StatusBadge'
 import type { User } from '../types'
 
 // ─── Skeleton row ─────────────────────────────────────────────────────────────
@@ -25,6 +23,10 @@ import type { User } from '../types'
 function SkeletonRow() {
   return (
     <tr className="border-b border-slate-100 animate-pulse">
+      {/* Checkbox */}
+      <td className="px-4 py-3 w-10">
+        <div className="w-4 h-4 bg-slate-200 rounded" />
+      </td>
       {/* Avatar + name */}
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
@@ -37,7 +39,6 @@ function SkeletonRow() {
       </td>
       <td className="px-4 py-3"><div className="h-3 w-20 bg-slate-200 rounded-full" /></td>
       <td className="px-4 py-3"><div className="h-5 w-24 bg-slate-200 rounded-full" /></td>
-      <td className="px-4 py-3"><div className="h-3 w-24 bg-slate-200 rounded-full" /></td>
       <td className="px-4 py-3"><div className="h-3 w-16 bg-slate-200 rounded-full" /></td>
       <td className="px-4 py-3"><div className="h-6 w-16 bg-slate-200 rounded-lg" /></td>
     </tr>
@@ -139,6 +140,7 @@ interface UsersTableProps {
   onSort:       (field: string) => void
   onEdit:       (user: User) => void
   onToggle:     (user: User) => void
+  onDelete:     (user: User) => void
   onRowClick:   (user: User) => void
   toggleLoadingId?: number | null
   // Bulk selection props
@@ -160,6 +162,7 @@ export function UsersTable({
   onSort,
   onEdit,
   onToggle,
+  onDelete,
   onRowClick,
   toggleLoadingId = null,
   selectedIds,
@@ -212,7 +215,6 @@ export function UsersTable({
               <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
                 Status
               </th>
-              <SortableHeader label="Last active" field="last_activity" currentOrdering={ordering} onSort={onSort} />
               <SortableHeader label="Joined"      field="date_joined"   currentOrdering={ordering} onSort={onSort} />
               <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">
                 Actions
@@ -224,7 +226,7 @@ export function UsersTable({
               Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={6}>
                   <EmptyState
                     icon={<Users size={20} />}
                     title="No users found"
@@ -285,21 +287,6 @@ export function UsersTable({
                       />
                     </td>
 
-                    {/* Last activity */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        {user.is_active && user.online_status !== 'offline' && (
-                          <OnlineStatusDot status={user.online_status} />
-                        )}
-                        <span className="text-xs text-slate-500">
-                          {user.last_activity
-                            ? formatDistanceToNow(new Date(user.last_activity), { addSuffix: true })
-                            : <span className="italic text-slate-400">Never</span>
-                          }
-                        </span>
-                      </div>
-                    </td>
-
                     {/* Date joined */}
                     <td className="px-4 py-3 text-xs text-slate-500">
                       {new Date(user.date_joined).toLocaleDateString('en-GB', {
@@ -341,6 +328,16 @@ export function UsersTable({
                               ? <PowerOff   size={14} />
                               : <PowerCircle size={14} />
                           }
+                        </button>
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => onDelete(user)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Delete user"
+                          aria-label={`Delete ${user.full_name}`}
+                        >
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>

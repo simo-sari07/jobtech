@@ -53,6 +53,8 @@ const ONLINE_STYLES: Record<OnlineStatus, { dot: string; label: string }> = {
 }
 
 export function OnlineStatusDot({ status, showLabel = false }: OnlineStatusProps) {
+  if (status === 'offline') return null
+
   const styles = ONLINE_STYLES[status]
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -76,7 +78,9 @@ export function StatusBadge({ isActive, onlineStatus, size = 'sm' }: StatusBadge
   return (
     <div className="flex items-center gap-2">
       <AccountStatusBadge isActive={isActive} size={size} />
-      {isActive && <OnlineStatusDot status={onlineStatus} showLabel />}
+      {isActive && onlineStatus !== 'offline' && (
+        <OnlineStatusDot status={onlineStatus} showLabel />
+      )}
     </div>
   )
 }

@@ -8,7 +8,7 @@ Route ordering matters for Django's URL resolver:
 """
 from django.urls import path
 
-from apps.users.admin_views import (
+from .admin_views import (
     UserListCreateView,
     UserStatsView,
     UserDetailView,

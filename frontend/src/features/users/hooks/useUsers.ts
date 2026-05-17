@@ -341,8 +341,74 @@ export function useBulkToggleUsers() {
 }
 
 /**
- * Legacy alias — UsersManagePage (placeholder) imports useDeleteUser.
- * Maps to useToggleUser until that page is replaced in the next step.
- * @deprecated Use useToggleUser() directly.
+ * Deletes a user account.
+ *
+ * On success: invalidates the user list and stats.
+ *
+ * @example
+ *   const { mutate } = useDeleteUser()
+ *   mutate(5)
  */
-export const useDeleteUser = useToggleUser
+export function useDeleteUser() {
+  const qc = useQueryClient()
+
+  return useMutation<{ success: boolean; message: string }, unknown, number>({
+    mutationFn: (id) => usersApi.delete(id).then(r => r.data),
+
+    onSuccess: (res) => {
+      toast.success(res.message || 'User account deleted successfully.')
+      qc.invalidateQueries({ queryKey: USER_KEYS.lists() })
+      qc.invalidateQueries({ queryKey: USER_KEYS.stats() })
+    },
+
+    onError: (err) => {
+      toast.error(extractErrorMessage(err, 'Failed to delete user.'))
+    },
+  })
+}
+
+/**
+ * Bulk deletes multiple users.
+ * Runs sequential calls to the delete endpoint.
+ *
+ * @example
+ *   const { mutate } = useBulkDeleteUsers()
+ *   mutate([1, 2, 3])
+ */
+export function useBulkDeleteUsers() {
+  const qc = useQueryClient()
+
+  return useMutation<
+    { successCount: number; failCount: number },
+    unknown,
+    number[]
+  >({
+    mutationFn: async (ids) => {
+      let successCount = 0
+      let failCount    = 0
+
+      for (const id of ids) {
+        try {
+          await usersApi.delete(id)
+          successCount++
+        } catch (err) {
+          failCount++
+        }
+      }
+      return { successCount, failCount }
+    },
+
+    onSuccess: (res) => {
+      if (res.failCount === 0) {
+        toast.success(`Successfully deleted ${res.successCount} users.`)
+      } else {
+        toast.success(`${res.successCount} users deleted. ${res.failCount} failed.`)
+      }
+      qc.invalidateQueries({ queryKey: USER_KEYS.all })
+    },
+
+    onError: () => {
+      toast.error('Bulk deletion failed.')
+    },
+  })
+}

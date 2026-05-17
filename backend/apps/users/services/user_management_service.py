@@ -476,6 +476,46 @@ def change_user_password(
     logger.info('Password changed | user=%s | by=%s', target.id, requesting_user.id)
 
 
+def delete_user(
+    user_id: int,
+    requesting_user: User,
+    *,
+    request=None,
+) -> None:
+    """
+    Delete a user account completely.
+
+    Security:
+    - Admin cannot delete themselves (RULE 2).
+    - Admin cannot delete another admin (RULE 1).
+
+    Every mutating action is logged.
+    """
+    _require_admin(requesting_user)
+    target = _get_user_or_404(user_id)
+    _require_not_self(requesting_user, target)
+    _require_not_admin_target(target)
+
+    # Invalidate all sessions first
+    _blacklist_all_tokens(target)
+
+    # Log action before target is deleted (subject will remain but point to NULL via SET_NULL)
+    audit_service.log_action(
+        actor=requesting_user,
+        subject=target,
+        action=UserAuditLog.Actions.DELETED,
+        request=request,
+        metadata={
+            'deleted_user_email': target.email,
+            'deleted_user_role': target.role,
+            'deleted_user_name': target.get_full_name(),
+        },
+    )
+
+    logger.info('User deleted | id=%s | email=%s | by=%s', target.id, target.email, requesting_user.id)
+    target.delete()
+
+
 # ─── Private helpers ──────────────────────────────────────────────────────────
 
 def _blacklist_all_tokens(user: User) -> int:

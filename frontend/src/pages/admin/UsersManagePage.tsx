@@ -32,6 +32,8 @@ import {
   useChangePassword,
   useToggleUser,
   useBulkToggleUsers,
+  useDeleteUser,
+  useBulkDeleteUsers,
 } from "@/features/users/hooks/useUsers";
 import {
   UsersTable,
@@ -71,6 +73,8 @@ export default function UsersManagePage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [confirmUser, setConfirmUser] = useState<User | null>(null);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [auditUser, setAuditUser] = useState<User | null>(null);
   const [toggleLoadId, setToggleLoadId] = useState<number | null>(null);
 
@@ -95,6 +99,8 @@ export default function UsersManagePage() {
   const changePw = useChangePassword();
   const toggleUser = useToggleUser();
   const bulkToggle = useBulkToggleUsers();
+  const deleteUserMutation = useDeleteUser();
+  const bulkDeleteMutation = useBulkDeleteUsers();
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const users = usersData?.results ?? [];
@@ -131,6 +137,18 @@ export default function UsersManagePage() {
     await toggleUser.mutateAsync(confirmUser.id);
     setToggleLoadId(null);
     setConfirmUser(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteUser) return;
+    await deleteUserMutation.mutateAsync(deleteUser.id);
+    setDeleteUser(null);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    await bulkDeleteMutation.mutateAsync(selectedIds);
+    setSelectedIds([]);
+    setBulkDeleteOpen(false);
   };
 
   // ── Selection Handlers ────────────────────────────────────────────────────
@@ -201,6 +219,7 @@ export default function UsersManagePage() {
         onSort={(ordering) => updateFilter({ ordering })}
         onEdit={(user) => setEditingUser(user)}
         onToggle={(user) => setConfirmUser(user)}
+        onDelete={(user) => setDeleteUser(user)}
         onRowClick={(user) => navigate(`/dashboard/admin/users/${user.id}`)}
         toggleLoadingId={toggleLoadId}
         bulkActions={
@@ -209,7 +228,8 @@ export default function UsersManagePage() {
             onClear={() => setSelectedIds([])}
             onActivate={() => handleBulkAction("activate")}
             onDeactivate={() => handleBulkAction("deactivate")}
-            isLoading={bulkToggle.isPending}
+            onDelete={() => setBulkDeleteOpen(true)}
+            isLoading={bulkToggle.isPending || bulkDeleteMutation.isPending}
           />
         }
       />
@@ -262,6 +282,34 @@ export default function UsersManagePage() {
           }
           confirmLabel={confirmUser.is_active ? "Deactivate" : "Activate"}
           isLoading={toggleUser.isPending}
+        />
+      )}
+
+      {/* Delete Confirm */}
+      {deleteUser && (
+        <ConfirmDialog
+          isOpen={!!deleteUser}
+          onClose={() => setDeleteUser(null)}
+          onConfirm={handleDeleteConfirm}
+          intent="danger"
+          title="Delete Account"
+          description={`Are you absolutely sure you want to delete ${deleteUser.first_name}'s account? This action is permanent and cannot be undone.`}
+          confirmLabel="Delete"
+          isLoading={deleteUserMutation.isPending}
+        />
+      )}
+
+      {/* Bulk Delete Confirm */}
+      {bulkDeleteOpen && (
+        <ConfirmDialog
+          isOpen={bulkDeleteOpen}
+          onClose={() => setBulkDeleteOpen(false)}
+          onConfirm={handleBulkDeleteConfirm}
+          intent="danger"
+          title="Delete Multiple Accounts"
+          description={`Are you absolutely sure you want to delete ${selectedIds.length} selected accounts? This action is permanent and cannot be undone.`}
+          confirmLabel="Delete All"
+          isLoading={bulkDeleteMutation.isPending}
         />
       )}
 

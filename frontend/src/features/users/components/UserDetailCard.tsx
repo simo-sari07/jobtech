@@ -13,7 +13,7 @@
 import { formatDistanceToNow, format } from 'date-fns'
 import {
   Mail, Phone, Calendar, Activity,
-  Pencil, Lock, UserCheck, UserX, Clock,
+  Pencil, Lock, UserCheck, UserX, Clock, Trash2,
 } from 'lucide-react'
 import { Button, Badge } from '@/components/ui'
 import { RoleBadge } from './RoleBadge'
@@ -25,7 +25,9 @@ interface UserDetailCardProps {
   onEdit:          () => void
   onChangePassword: () => void
   onToggleActive:  () => void
+  onDelete?:       () => void
   isToggling?:     boolean
+  isDeleting?:     boolean
   /** Disable all action buttons (e.g. while a mutation is in flight) */
   isLoading?:      boolean
 }
@@ -79,7 +81,9 @@ export function UserDetailCard({
   onEdit,
   onChangePassword,
   onToggleActive,
+  onDelete,
   isToggling  = false,
+  isDeleting  = false,
   isLoading   = false,
 }: UserDetailCardProps) {
   const joinedDate   = new Date(user.date_joined)
@@ -106,7 +110,7 @@ export function UserDetailCard({
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <RoleBadge role={user.role} showIcon />
               <AccountStatusBadge isActive={user.is_active} />
-              {user.is_active && (
+              {user.is_active && user.online_status !== 'offline' && (
                 <OnlineStatusDot status={user.online_status} showLabel />
               )}
             </div>
@@ -181,6 +185,19 @@ export function UserDetailCard({
         >
           {user.is_active ? 'Deactivate Account' : 'Activate Account'}
         </Button>
+        {onDelete && (
+          <Button
+            variant="danger"
+            fullWidth
+            icon={<Trash2 size={14} />}
+            loading={isDeleting}
+            disabled={isLoading}
+            onClick={onDelete}
+            className="mt-2"
+          >
+            Delete Account
+          </Button>
+        )}
       </div>
     </div>
   )

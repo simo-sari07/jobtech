@@ -13,6 +13,7 @@ import {
   useChangePassword,
   useToggleUser,
   useUserAuditLog,
+  useDeleteUser,
 } from "@/features/users/hooks/useUsers";
 import {
   useApplications,
@@ -113,11 +114,13 @@ export default function UserDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const updateUser = useUpdateUser();
   const changePw = useChangePassword();
   const toggleUser = useToggleUser();
+  const deleteUserMutation = useDeleteUser();
 
   const handleUpdate = async (data: CreateUserPayload | UpdateUserPayload) => {
     if (!userId) return;
@@ -141,6 +144,13 @@ export default function UserDetailPage() {
     if (!userId) return;
     await toggleUser.mutateAsync(userId);
     setConfirmOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (!userId) return;
+    await deleteUserMutation.mutateAsync(userId);
+    setDeleteOpen(false);
+    navigate("/dashboard/admin/users");
   };
 
   // ── Loading / error states ─────────────────────────────────────────────────
@@ -197,7 +207,9 @@ export default function UserDetailPage() {
             onEdit={() => setEditOpen(true)}
             onChangePassword={() => setPwOpen(true)}
             onToggleActive={() => setConfirmOpen(true)}
+            onDelete={() => setDeleteOpen(true)}
             isToggling={toggleUser.isPending}
+            isDeleting={deleteUserMutation.isPending}
             isLoading={updateUser.isPending || changePw.isPending}
           />
         </div>
@@ -265,6 +277,17 @@ export default function UserDetailPage() {
         }
         confirmLabel={user.is_active ? "Deactivate" : "Activate"}
         isLoading={toggleUser.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        intent="danger"
+        title="Delete Account"
+        description={`Are you absolutely sure you want to delete ${user.first_name}'s account? This action is permanent and cannot be undone.`}
+        confirmLabel="Delete"
+        isLoading={deleteUserMutation.isPending}
       />
     </div>
   );
