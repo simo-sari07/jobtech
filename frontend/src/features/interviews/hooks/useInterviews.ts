@@ -4,7 +4,8 @@ import {
   getInterviewDetailApi, 
   scheduleInterviewApi, 
   updateInterviewApi, 
-  submitEvaluationApi 
+  submitEvaluationApi,
+  deleteInterviewApi,
 } from '../api';
 import type { CreateInterviewRequest, UpdateInterviewRequest, CreateEvaluationRequest } from '../types';
 import toast from 'react-hot-toast';
@@ -66,6 +67,20 @@ export const useSubmitEvaluation = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.detail || 'Failed to submit evaluation');
+    },
+  });
+};
+
+export const useDeleteInterview = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number | string) => deleteInterviewApi(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['interviews'] });
+      toast.success('Interview deleted');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Failed to delete interview');
     },
   });
 };

@@ -6,6 +6,7 @@ import os
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
 def cv_upload_path(instance, filename):
@@ -39,8 +40,10 @@ class Application(models.Model):
         PENDING     = 'pending',     'Pending'
         IN_REVIEW   = 'in_review',   'In Review'
         SHORTLISTED = 'shortlisted', 'Shortlisted'
+        INTERVIEW   = 'interview',   'Interview'
         REJECTED    = 'rejected',    'Rejected'
         HIRED       = 'hired',       'Hired'
+        WITHDRAWN   = 'withdrawn',   'Withdrawn'
 
     # ── Relationships ────────────────────────────────────────────────────────
     candidate = models.ForeignKey(
@@ -64,6 +67,16 @@ class Application(models.Model):
     ai_score      = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     ai_parsed_data = models.JSONField(null=True, blank=True)   # Populated by AI CV parser
 
+    # ── Archive ─────────────────────────────────────────────────────────────
+    is_archived  = models.BooleanField(default=False)
+    archived_by  = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='archived_applications',
+    )
+    archived_at  = models.DateTimeField(null=True, blank=True)
+
     # ── Timestamps ───────────────────────────────────────────────────────────
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -82,5 +95,45 @@ class Application(models.Model):
 
     @property
     def is_terminal(self):
-        """Hired and Rejected are terminal states — no further transitions."""
-        return self.status in (self.Status.HIRED, self.Status.REJECTED)
+        """Hired, Rejected, and Withdrawn are terminal states."""
+        return self.status in (
+            self.Status.HIRED,
+            self.Status.REJECTED,
+            self.Status.WITHDRAWN,
+        )
+
+
+class ApplicationAuditLog(models.Model):
+    """Immutable audit trail for every application action."""
+
+    class Action(models.TextChoices):
+        STATUS_CHANGE  = 'status_change',  'Status Change'
+        ARCHIVED       = 'archived',       'Archived'
+        UNARCHIVED     = 'unarchived',     'Unarchived'
+        DELETED        = 'deleted',        'Deleted'
+        WITHDRAWN      = 'withdrawn',      'Withdrawn'
+        NOTE_ADDED     = 'note_added',     'Note Added'
+        CREATED        = 'created',        'Created'
+
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name='audit_logs',
+    )
+    action      = models.CharField(max_length=20, choices=Action.choices)
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='+',
+    )
+    old_value   = models.CharField(max_length=50, blank=True, default='')
+    new_value   = models.CharField(max_length=50, blank=True, default='')
+    note        = models.TextField(blank=True, default='')
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'[{self.action}] App #{self.application_id} by {self.performed_by}'

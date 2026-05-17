@@ -75,8 +75,6 @@ export default function PublicNavbar() {
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex items-center gap-8 mr-8 text-sm font-medium">
               <Link to="/jobs" className="text-slate-600 hover:text-blue-600 transition-colors">Browse Jobs</Link>
-              <Link to="/companies" className="text-slate-600 hover:text-blue-600 transition-colors">Companies</Link>
-              <Link to="/pricing" className="text-slate-600 hover:text-blue-600 transition-colors">Pricing</Link>
             </nav>
 
             {!isAuthenticated && (

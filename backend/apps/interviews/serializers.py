@@ -37,11 +37,12 @@ class InterviewCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_application(self, application):
-        """Only shortlisted applications can have an interview."""
+        """Only shortlisted or interview-stage applications can have an interview."""
         from apps.applications.models import Application
-        if application.status != Application.Status.SHORTLISTED:
+        allowed = (Application.Status.SHORTLISTED, Application.Status.INTERVIEW)
+        if application.status not in allowed:
             raise serializers.ValidationError(
-                'Interviews can only be scheduled for shortlisted applications.'
+                'Interviews can only be scheduled for shortlisted or interview-stage applications.'
             )
         return application
 
@@ -54,18 +55,20 @@ class InterviewCreateSerializer(serializers.ModelSerializer):
 
 
 class InterviewListSerializer(serializers.ModelSerializer):
-    """Compact list view — includes candidate name and job title."""
+    """Compact list view — includes candidate name, job title, recruiter name."""
     candidate_name  = serializers.SerializerMethodField()
     candidate_email = serializers.SerializerMethodField()
     job_title       = serializers.SerializerMethodField()
+    recruiter_name  = serializers.SerializerMethodField()
     has_evaluation  = serializers.SerializerMethodField()
 
     class Meta:
         model = Interview
         fields = [
-            'id', 'interview_type', 'scheduled_at', 'duration_minutes',
-            'status', 'candidate_name', 'candidate_email', 'job_title',
-            'has_evaluation', 'reminder_sent', 'created_at',
+            'id', 'application_id', 'interview_type', 'scheduled_at', 'duration_minutes',
+            'location_or_link', 'status', 'notes',
+            'candidate_name', 'candidate_email', 'job_title', 'recruiter_name',
+            'has_evaluation', 'reminder_sent', 'created_at', 'updated_at',
         ]
 
     def get_candidate_name(self, obj) -> str:
@@ -76,6 +79,11 @@ class InterviewListSerializer(serializers.ModelSerializer):
 
     def get_job_title(self, obj) -> str:
         return obj.application.job.title
+
+    def get_recruiter_name(self, obj) -> str | None:
+        if obj.recruiter:
+            return obj.recruiter.get_full_name()
+        return None
 
     def get_has_evaluation(self, obj) -> bool:
         return hasattr(obj, 'evaluation')

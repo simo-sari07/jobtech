@@ -53,7 +53,6 @@ export default function PublicFooter() {
             <ul className="space-y-3">
               <li><Link to="/login" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">HR Dashboard</Link></li>
               <li><Link to="/login" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Post a Job</Link></li>
-              <li><Link to="/login" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Pricing</Link></li>
               <li><Link to="/login" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Resources</Link></li>
             </ul>
           </div>

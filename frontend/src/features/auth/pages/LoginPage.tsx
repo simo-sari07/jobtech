@@ -180,12 +180,7 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          {/* Demo credentials hint */}
-          <div className="mt-6 p-3 rounded-lg bg-slate-50 border border-slate-200">
-            <p className="text-xs font-medium text-slate-600 mb-1">Demo credentials</p>
-            <p className="text-xs text-slate-500">candidate@jobtech.ma · Role123!</p>
-            <p className="text-xs text-slate-500">recruiter@jobtech.ma · Role123!</p>
-          </div>
+         
         </div>
       </div>
     </div>

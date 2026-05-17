@@ -10,4 +10,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='application',
+            name='ai_status',
+        ),
+        migrations.RemoveField(
+            model_name='application',
+            name='ai_status_msg',
+        ),
     ]

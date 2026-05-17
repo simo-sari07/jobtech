@@ -37,3 +37,7 @@ export const getEvaluationApi = async (id: number | string) => {
   const { data } = await client.get(INTERVIEWS_ENDPOINTS.EVALUATION(id));
   return data as Evaluation;
 };
+
+export const deleteInterviewApi = async (id: number | string) => {
+  await client.delete(INTERVIEWS_ENDPOINTS.DELETE(id));
+};

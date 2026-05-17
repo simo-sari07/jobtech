@@ -1,42 +1,94 @@
 /**
- * Admin Dashboard — light-mode redesign.
+ * Admin Dashboard — light-mode redesign with real data integration.
  */
 import { useAuthStore } from '@/store/authStore'
-import { Card, Button, Divider, Badge } from '@/components/ui'
+import { Card, Button, Badge } from '@/components/ui'
 import { 
-  Users, Briefcase, UserCheck, Calendar, 
-  Settings, Shield, Activity, BarChart,
-  PlusCircle, ArrowRight
+  Users, Briefcase, UserCheck, Settings, 
+  PlusCircle, Eye, AlertCircle
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useUserStats } from '@/features/users/hooks/useUsers'
+import { useJobs } from '@/features/jobs/hooks/useJobs'
+import { useApplications } from '@/features/applications/hooks/useApplications'
+
+// ── Status Config ────────────────────────────────────────────────────────────
+
+const STATUS_CFG: Record<string, {
+  label: string
+  bg: string
+  text: string
+  dot: string
+}> = {
+  pending:     { label: 'Pending',     bg: 'bg-slate-50',  text: 'text-slate-600', dot: 'bg-slate-400' },
+  in_review:   { label: 'In Review',   bg: 'bg-blue-50',   text: 'text-blue-700',  dot: 'bg-blue-500' },
+  shortlisted: { label: 'Shortlisted', bg: 'bg-purple-50', text: 'text-purple-700',dot: 'bg-purple-500' },
+  interview:   { label: 'Interview',   bg: 'bg-teal-50',   text: 'text-teal-700',  dot: 'bg-teal-500' },
+  hired:       { label: 'Hired',       bg: 'bg-green-50',  text: 'text-green-700', dot: 'bg-green-500' },
+  rejected:    { label: 'Rejected',    bg: 'bg-red-50',    text: 'text-red-700',   dot: 'bg-red-500' },
+  withdrawn:   { label: 'Withdrawn',   bg: 'bg-amber-50',  text: 'text-amber-700', dot: 'bg-amber-500' },
+}
+
+// ── Score Helpers ─────────────────────────────────────────────────────────────
+
+function scoreColor(s: number): string {
+  if (s >= 80) return 'bg-green-500'
+  if (s >= 60) return 'bg-blue-500'
+  if (s >= 40) return 'bg-amber-500'
+  return 'bg-red-400'
+}
+
+function scoreTextColor(s: number): string {
+  if (s >= 80) return 'text-green-700'
+  if (s >= 60) return 'text-blue-700'
+  if (s >= 40) return 'text-amber-700'
+  return 'text-red-600'
+}
 
 export default function AdminDashboard() {
   const { user } = useAuthStore()
 
-  const stats = [
-    { label: 'Total Users',      value: '24', icon: <Users size={20} className="text-blue-600" />,     bg: 'bg-blue-50' },
-    { label: 'Active Jobs',      value: '12', icon: <Briefcase size={20} className="text-emerald-600" />, bg: 'bg-emerald-50' },
-    { label: 'Candidate Pool',   value: '158', icon: <UserCheck size={20} className="text-purple-600" />, bg: 'bg-purple-50' },
-    { label: 'System Health',    value: '99%', icon: <Activity size={20} className="text-emerald-600" />,  bg: 'bg-emerald-50' },
+  // Real data fetching hooks
+  const { data: userStats, isLoading: statsLoading } = useUserStats()
+  const { data: jobsData, isLoading: jobsLoading } = useJobs()
+  const { data: appsData, isLoading: appsLoading } = useApplications()
+
+  const realStats = [
+    { 
+      label: 'Total Users', 
+      value: userStats?.data?.total_users ?? 0, 
+      icon: <Users size={20} className="text-blue-600" />, 
+      bg: 'bg-blue-50', 
+      loading: statsLoading 
+    },
+    { 
+      label: 'Active Jobs', 
+      value: jobsData?.count ?? 0, 
+      icon: <Briefcase size={20} className="text-emerald-600" />, 
+      bg: 'bg-emerald-50', 
+      loading: jobsLoading 
+    },
+    { 
+      label: 'Total Applications', 
+      value: appsData?.count ?? 0, 
+      icon: <UserCheck size={20} className="text-purple-600" />, 
+      bg: 'bg-purple-50', 
+      loading: appsLoading 
+    },
   ]
 
-  const actions = [
-    { icon: <PlusCircle size={18} />, label: 'Create User', desc: 'Add new staff member', to: '/dashboard/admin/users', color: 'text-blue-600 bg-blue-50' },
-    { icon: <Settings size={18} />, label: 'Platform Config', desc: 'Global app settings', to: '#', color: 'text-slate-600 bg-slate-50' },
-    { icon: <Shield size={18} />, label: 'Security Audit', desc: 'Review system logs', to: '#', color: 'text-red-600 bg-red-50' },
-    { icon: <BarChart size={18} />, label: 'Growth Reports', desc: 'Platform usage metrics', to: '#', color: 'text-purple-600 bg-purple-50' },
-  ]
+  const recentApps = appsData?.results?.slice(0, 5) || []
 
   return (
     <div className="flex flex-col gap-6 animate-fade-up">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
             System Console
           </h1>
           <p className="text-slate-500 mt-1 text-sm">
-            Control center for {user?.first_name}. Monitor platform health and manage user access.
+            Control center for {user?.first_name}. Monitor platform metrics and manage user applications.
           </p>
         </div>
         <div className="flex gap-2">
@@ -45,91 +97,125 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(s => (
-          <Card key={s.label} className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.bg}`}>
+      {/* Real Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {realStats.map(s => (
+          <Card key={s.label} className="flex items-center gap-4 p-5 hover:shadow-md transition-shadow">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${s.bg}`}>
               {s.icon}
             </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">{s.value}</p>
-              <p className="text-xs text-slate-500 font-medium">{s.label}</p>
+            <div className="flex-1 min-w-0">
+              {s.loading ? (
+                <div className="h-7 w-12 bg-slate-100 animate-pulse rounded-md mb-1" />
+              ) : (
+                <p className="text-2xl font-extrabold text-slate-900">{s.value}</p>
+              )}
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{s.label}</p>
             </div>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick actions */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <h2 className="font-bold text-slate-900 mb-5">Administrator Actions</h2>
-            <div className="flex flex-col gap-2">
-              {actions.map(a => (
-                <Link
-                  key={a.label}
-                  to={a.to}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors group"
+      {/* Real Job Applications Feed */}
+      <Card className="w-full p-6 shadow-sm border border-slate-200/60">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="font-bold text-slate-900 text-lg">Recent Job Applications</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Real-time candidate submissions and system analysis</p>
+          </div>
+          <Badge variant="blue" dot>Live Sync</Badge>
+        </div>
+        
+        {appsLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-slate-100 rounded-full" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-28 bg-slate-100 rounded-md" />
+                    <div className="h-3 w-40 bg-slate-100 rounded-md" />
+                  </div>
+                </div>
+                <div className="h-6 w-20 bg-slate-100 rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : recentApps.length > 0 ? (
+          <div className="space-y-3">
+            {recentApps.map(app => {
+              const cfg = STATUS_CFG[app.status] ?? STATUS_CFG.pending
+              const score = app.ai_score != null ? Math.round(Number(app.ai_score)) : null
+
+              return (
+                <div 
+                  key={app.id} 
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl hover:bg-slate-50/80 transition-colors border border-slate-100"
                 >
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${a.color}`}>
-                    {a.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800">{a.label}</p>
-                    <p className="text-xs text-slate-500">{a.desc}</p>
-                  </div>
-                  <ArrowRight size={14} className="text-slate-400 group-hover:text-slate-900 transition-colors" />
-                </Link>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="bg-slate-900 border-none text-white p-6 shadow-xl">
-             <div className="flex items-center gap-2 mb-4">
-                <Shield className="text-blue-400" size={20} />
-                <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Security Pulse</span>
-             </div>
-             <p className="text-sm font-medium mb-1">Backup status: OK</p>
-             <p className="text-xs text-slate-400">Last full system backup performed 2 hours ago. 0 critical vulnerabilities reported.</p>
-          </Card>
-        </div>
-
-        {/* Real-time feed placeholder */}
-        <div className="lg:col-span-2">
-          <Card className="h-full">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="font-bold text-slate-900">Recent System Activity</h2>
-              <Badge variant="blue" dot>Live Sync</Badge>
-            </div>
-            
-            <div className="space-y-4">
-               {[
-                 { user: 'HR Manager', action: 'Published new job: Senior Product Designer', time: '10m ago', icon: <PlusCircle size={14} /> },
-                 { user: 'Recruiter', action: 'Scheduled interview with Sarah Connor', time: '1h ago', icon: <Calendar size={14} /> },
-                 { user: 'System', action: 'AI analysis completed for 12 new CVs', time: '3h ago', icon: <Activity size={14} /> },
-                 { user: 'Admin', action: 'Modified role permissions for candidate group', time: '5h ago', icon: <Shield size={14} /> },
-               ].map((log, i) => (
-                 <div key={i}>
-                    <div className="flex items-start gap-4">
-                       <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 shrink-0">
-                          {log.icon}
-                       </div>
-                       <div className="flex-1">
-                          <p className="text-sm font-bold text-slate-800 line-clamp-1">{log.action}</p>
-                          <p className="text-xs text-slate-500">by {log.user} • {log.time}</p>
-                       </div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 text-white font-bold text-sm shadow-sm">
+                      {app.candidate_name?.charAt(0)?.toUpperCase() ?? '?'}
                     </div>
-                    {i < 3 && <Divider className="mt-4" />}
-                 </div>
-               ))}
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-800 truncate text-sm">{app.candidate_name}</p>
+                      <p className="text-xs text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
+                        <Briefcase size={12} className="text-slate-400 shrink-0" />
+                        <span className="font-medium text-slate-600">{app.job_title}</span>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
+                    {/* AI Score */}
+                    {score != null ? (
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-bold ${scoreTextColor(score)}`}>
+                          AI: {score}%
+                        </span>
+                        <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all ${scoreColor(score)}`} style={{ width: `${score}%` }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 font-medium">AI Processing</span>
+                    )}
+                    
+                    {/* Status Badge */}
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full px-2.5 py-0.5 border ${cfg.bg} ${cfg.text} border-transparent`}>
+                      <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
+                      {cfg.label}
+                    </span>
+
+                    {/* View Details button */}
+                    <Link to={`/dashboard/users/${app.candidate_id}`}>
+                      <Button variant="secondary" size="sm" className="gap-1.5 items-center hidden sm:flex">
+                        <Eye size={12} />
+                        View
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="p-3 bg-slate-50 rounded-full text-slate-400 mb-3 border border-slate-100">
+              <AlertCircle size={24} />
             </div>
-            <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-               <button className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors">View detailed audit logs →</button>
-            </div>
-          </Card>
+            <h3 className="font-semibold text-slate-800 text-sm">No applications found</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-xs">Applications submitted by candidates will appear here automatically.</p>
+          </div>
+        )}
+
+        <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+           <Link to="/dashboard/applications">
+              <button className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors">
+                Manage all job applications →
+              </button>
+           </Link>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

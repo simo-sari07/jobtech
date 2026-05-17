@@ -2,7 +2,7 @@
 Applications serializers — validation only, zero business logic.
 """
 from rest_framework import serializers
-from .models import Application
+from .models import Application, ApplicationAuditLog
 from ..jobs.serializers import JobListSerializer, PublicJobOfferSerializer
 
 
@@ -48,7 +48,7 @@ class ApplicationListSerializer(serializers.ModelSerializer):
             'candidate_id', 'candidate_name', 'candidate_email',
             'job_id', 'job_title', 'job_location',
             'cv_url', 'ai_score', 'cover_letter',
-            'notes', 'created_at', 'updated_at',
+            'notes', 'is_archived', 'created_at', 'updated_at',
         ]
 
     def get_candidate_id(self, obj) -> int:
@@ -107,3 +107,17 @@ class ApplicationStatusSerializer(serializers.ModelSerializer):
                 f'Application is already in a terminal state ({instance.status}).'
             )
         return new_status
+
+
+class ApplicationAuditLogSerializer(serializers.ModelSerializer):
+    """Read-only serializer for audit log entries."""
+    performed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ApplicationAuditLog
+        fields = ['id', 'action', 'performed_by_name', 'old_value', 'new_value', 'note', 'created_at']
+
+    def get_performed_by_name(self, obj) -> str:
+        if obj.performed_by:
+            return obj.performed_by.get_full_name()
+        return 'System'

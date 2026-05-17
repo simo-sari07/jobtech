@@ -20,10 +20,17 @@ export const JOBS_ENDPOINTS = {
 } as const
 
 export const APPLICATIONS_ENDPOINTS = {
-  LIST:   `${API_BASE}/applications/`,
-  MINE:   `${API_BASE}/applications/mine/`,
-  DETAIL: (id: number | string) => `${API_BASE}/applications/${id}/`,
-  STATUS: (id: number | string) => `${API_BASE}/applications/${id}/`,
+  LIST:         `${API_BASE}/applications/`,
+  MINE:         `${API_BASE}/applications/mine/`,
+  DETAIL:       (id: number | string) => `${API_BASE}/applications/${id}/`,
+  STATUS:       (id: number | string) => `${API_BASE}/applications/${id}/`,
+  ARCHIVE:      (id: number | string) => `${API_BASE}/applications/${id}/archive/`,
+  UNARCHIVE:    (id: number | string) => `${API_BASE}/applications/${id}/unarchive/`,
+  WITHDRAW:     (id: number | string) => `${API_BASE}/applications/${id}/withdraw/`,
+  AUDIT_LOG:    (id: number | string) => `${API_BASE}/applications/${id}/audit-log/`,
+  BULK_STATUS:  `${API_BASE}/applications/bulk-status/`,
+  BULK_ARCHIVE: `${API_BASE}/applications/bulk-archive/`,
+  BULK_DELETE:  `${API_BASE}/applications/bulk-delete/`,
 } as const
 
 export const PUBLIC_ENDPOINTS = {
@@ -56,6 +63,7 @@ export const INTERVIEWS_ENDPOINTS = {
   DETAIL:     (id: number | string) => `${API_BASE}/interviews/${id}/`,
   EVALUATE:   (id: number | string) => `${API_BASE}/interviews/${id}/evaluate/`,
   EVALUATION: (id: number | string) => `${API_BASE}/interviews/${id}/evaluation/`,
+  DELETE:     (id: number | string) => `${API_BASE}/interviews/${id}/`,
 } as const
 
 export const AI_ENDPOINTS = {

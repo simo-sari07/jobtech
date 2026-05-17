@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError, PermissionDenied
 
 from apps.interviews.models import Interview, Evaluation
-from apps.applications.models import Application
+from apps.applications.models import Application, ApplicationAuditLog
 from apps.users.models import User
 from apps.candidates.notification_service import notify
 
@@ -33,9 +33,10 @@ def schedule_interview(recruiter: User, validated_data: dict) -> Interview:
 
     application: Application = validated_data['application']
 
-    if application.status != Application.Status.SHORTLISTED:
+    allowed_app_statuses = (Application.Status.SHORTLISTED, Application.Status.INTERVIEW)
+    if application.status not in allowed_app_statuses:
         raise ValidationError(
-            'Interviews can only be scheduled for shortlisted applications.'
+            'Interviews can only be scheduled for shortlisted or interview-stage applications.'
         )
 
     scheduled_at = validated_data['scheduled_at']
@@ -46,6 +47,20 @@ def schedule_interview(recruiter: User, validated_data: dict) -> Interview:
         recruiter=recruiter,
         **validated_data,
     )
+
+    # Automatically transition shortlisted application status to interview stage
+    if application.status == Application.Status.SHORTLISTED:
+        application.status = Application.Status.INTERVIEW
+        application.save(update_fields=['status', 'updated_at'])
+
+        ApplicationAuditLog.objects.create(
+            application=application,
+            action=ApplicationAuditLog.Action.STATUS_CHANGE,
+            performed_by=recruiter,
+            old_value=Application.Status.SHORTLISTED,
+            new_value=Application.Status.INTERVIEW,
+            note='Automatically moved to interview stage upon scheduling interview.'
+        )
 
     candidate = application.candidate
 

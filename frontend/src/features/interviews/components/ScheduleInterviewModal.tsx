@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useApplications } from "@/features/applications/hooks/useApplications";
+import toast from "react-hot-toast";
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,6 +46,22 @@ export default function ScheduleInterviewModal({
   jobTitle,
 }: Props) {
   const { mutateAsync: schedule, isPending } = useScheduleInterview();
+  const [selectedAppId, setSelectedAppId] = useState<number | "">("");
+
+  // Only fetch applications if we don't have a pre-selected one
+  const showAppSelector = !applicationId || applicationId === 0;
+  const { data: appsData, isLoading: appsLoading } = useApplications(
+    showAppSelector ? { archived: false } : undefined
+  );
+  
+  const applications = (appsData?.results ?? []).filter(
+    (app) => app.status === "shortlisted" || app.status === "interview"
+  );
+
+  // Find selected application details to display in subtitle if selecting from dropdown
+  const selectedApp = applications.find(a => a.id === selectedAppId);
+  const displayCandidateName = candidateName || selectedApp?.candidate_name || "";
+  const displayJobTitle = jobTitle || selectedApp?.job_title || "";
 
   const {
     register,
@@ -65,13 +83,21 @@ export default function ScheduleInterviewModal({
   const selectedType = watch("interview_type");
 
   useEffect(() => {
-    if (isOpen) reset();
+    if (isOpen) {
+      reset();
+      setSelectedAppId("");
+    }
   }, [isOpen, reset]);
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
+      const targetAppId = applicationId > 0 ? applicationId : Number(selectedAppId);
+      if (!targetAppId) {
+        toast.error("Please select a candidate application first!");
+        return;
+      }
       await schedule({
-        application: applicationId,
+        application: targetAppId,
         ...data,
       });
       onClose();
@@ -89,14 +115,16 @@ export default function ScheduleInterviewModal({
         onClick={onClose}
       />
 
-      <div className="relative z-10 w-full max-w-md bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col">
+      <div className="relative z-10 w-full max-w-md bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-200">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
               Schedule Interview
             </h2>
             <p className="text-xs text-slate-500">
-              For {candidateName} • {jobTitle}
+              {displayCandidateName || displayJobTitle 
+                ? `For ${displayCandidateName} • ${displayJobTitle}`
+                : "Create a new scheduled session"}
             </p>
           </div>
           <button
@@ -111,6 +139,34 @@ export default function ScheduleInterviewModal({
           onSubmit={handleSubmit(onSubmit)}
           className="flex-1 overflow-y-auto p-6 space-y-5"
         >
+          {/* Candidate Dropdown Selector (if no preselected application) */}
+          {showAppSelector && (
+            <div className="space-y-1.5 bg-slate-50 p-4 rounded-2xl border border-slate-200/50">
+              <label className="text-sm font-semibold text-slate-700 flex items-center justify-between">
+                <span>Select Candidate Application</span>
+                {appsLoading && <span className="text-xs text-slate-400 animate-pulse">Loading...</span>}
+              </label>
+              <select
+                value={selectedAppId}
+                onChange={(e) => setSelectedAppId(e.target.value ? Number(e.target.value) : "")}
+                className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-blue-500 focus:ring-3 focus:ring-blue-50 outline-none bg-white text-slate-700 font-medium"
+              >
+                <option value="">-- Choose Candidate --</option>
+                {applications.length === 0 && !appsLoading ? (
+                  <option value="" disabled>
+                    No shortlisted or interview-stage candidates available
+                  </option>
+                ) : (
+                  applications.map((app) => (
+                    <option key={app.id} value={app.id}>
+                      {app.candidate_name} — {app.job_title} ({app.status})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          )}
+
           {/* Type Selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">
@@ -202,7 +258,7 @@ export default function ScheduleInterviewModal({
           <Button variant="secondary" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" loading={isPending}>
+          <Button onClick={handleSubmit(onSubmit)} loading={isPending}>
             Schedule Interview
           </Button>
         </div>

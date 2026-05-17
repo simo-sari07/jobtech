@@ -44,7 +44,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
       - evaluate action: IsRecruiter
       - evaluation (read) action: IsRecruiter
     """
-    http_method_names = ['get', 'post', 'patch', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
     filter_backends   = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class   = InterviewFilter
     ordering_fields   = ['scheduled_at', 'status', 'created_at']

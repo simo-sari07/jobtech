@@ -2,22 +2,40 @@
 Application service layer — ALL business logic lives here.
 Views are thin and only call these functions.
 """
+import logging
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from ..models import Application
+from ..models import Application, ApplicationAuditLog
 from ...jobs.models import Job
 from ...users.models import User
 from ...candidates.notification_service import notify
+
+logger = logging.getLogger(__name__)
 
 
 # ── Valid status transitions ──────────────────────────────────────────────────
 VALID_TRANSITIONS = {
     Application.Status.PENDING:     [Application.Status.IN_REVIEW, Application.Status.REJECTED],
     Application.Status.IN_REVIEW:   [Application.Status.SHORTLISTED, Application.Status.REJECTED],
-    Application.Status.SHORTLISTED: [Application.Status.HIRED, Application.Status.REJECTED],
-    Application.Status.HIRED:       [],  # Terminal
-    Application.Status.REJECTED:    [],  # Terminal
+    Application.Status.SHORTLISTED: [Application.Status.INTERVIEW, Application.Status.HIRED, Application.Status.REJECTED],
+    Application.Status.INTERVIEW:   [Application.Status.HIRED, Application.Status.REJECTED],
+    Application.Status.HIRED:       [],
+    Application.Status.REJECTED:    [],
+    Application.Status.WITHDRAWN:   [],
 }
+
+
+def _log_action(application, action, user, old_value='', new_value='', note=''):
+    """Create an immutable audit log entry."""
+    ApplicationAuditLog.objects.create(
+        application=application,
+        action=action,
+        performed_by=user,
+        old_value=old_value,
+        new_value=new_value,
+        note=note,
+    )
 
 
 def validate_status_transition(current: str, new: str) -> None:
@@ -40,17 +58,17 @@ def submit_application(candidate: User, validated_data: dict) -> Application:
     """
     job = validated_data['job']
 
-    # Double-check job is open (serializer validates but service is the source of truth)
     if not job.is_open:
         raise ValidationError('This job offer is no longer accepting applications.')
 
-    # Prevent duplicate applications
     if Application.objects.filter(candidate=candidate, job=job).exists():
         raise ValidationError('You have already applied for this position.')
 
     application = Application.objects.create(candidate=candidate, **validated_data)
 
-    # Notify candidate of successful submission
+    _log_action(application, ApplicationAuditLog.Action.CREATED, candidate,
+                new_value='pending', note=f'Applied for {job.title}')
+
     notify(
         user=candidate,
         notif_type='app_submitted',
@@ -58,14 +76,12 @@ def submit_application(candidate: User, validated_data: dict) -> Application:
         related_url='/dashboard/candidate/applications',
     )
 
-    # Trigger AI CV parsing pipeline (on_commit ensures the row is committed first)
     def _trigger_ai():
         try:
             from ...ai_engine.tasks import parse_cv_task
             parse_cv_task.apply_async(args=[application.pk], queue='ai')
         except Exception as exc:
-            import logging
-            logging.getLogger(__name__).warning(
+            logger.warning(
                 'Could not trigger AI pipeline for application #%d: %s', application.pk, exc
             )
 
@@ -96,15 +112,20 @@ def update_application_status(
 
     validate_status_transition(application.status, new_status)
 
+    old_status = application.status
     application.status = new_status
     if notes is not None:
         application.notes = notes
     application.save(update_fields=['status', 'notes', 'updated_at'])
 
-    # Notify candidate of status change
+    _log_action(application, ApplicationAuditLog.Action.STATUS_CHANGE, user,
+                old_value=old_status, new_value=new_status,
+                note=notes or '')
+
     status_labels = {
         Application.Status.IN_REVIEW:   'is now under review',
         Application.Status.SHORTLISTED: 'has been shortlisted 🎉',
+        Application.Status.INTERVIEW:   'has moved to the interview stage 📋',
         Application.Status.HIRED:       'has been accepted — congratulations! 🎊',
         Application.Status.REJECTED:    'was not selected this time',
     }
@@ -119,13 +140,137 @@ def update_application_status(
     return application
 
 
-def get_applications_queryset(user: User):
+@transaction.atomic
+def archive_application(application: Application, user: User) -> Application:
+    """Archive an application. Admin and HR only."""
+    if user.role not in (User.Roles.ADMIN, User.Roles.HR_MANAGER):
+        raise PermissionDenied('Only admins and HR managers can archive applications.')
+    if application.is_archived:
+        raise ValidationError('Application is already archived.')
+
+    application.is_archived = True
+    application.archived_by = user
+    application.archived_at = timezone.now()
+    application.save(update_fields=['is_archived', 'archived_by', 'archived_at', 'updated_at'])
+
+    _log_action(application, ApplicationAuditLog.Action.ARCHIVED, user)
+    return application
+
+
+@transaction.atomic
+def unarchive_application(application: Application, user: User) -> Application:
+    """Restore an archived application."""
+    if user.role not in (User.Roles.ADMIN, User.Roles.HR_MANAGER):
+        raise PermissionDenied('Only admins and HR managers can unarchive applications.')
+    if not application.is_archived:
+        raise ValidationError('Application is not archived.')
+
+    application.is_archived = False
+    application.archived_by = None
+    application.archived_at = None
+    application.save(update_fields=['is_archived', 'archived_by', 'archived_at', 'updated_at'])
+
+    _log_action(application, ApplicationAuditLog.Action.UNARCHIVED, user)
+    return application
+
+
+@transaction.atomic
+def delete_application(application: Application, user: User) -> None:
+    """Permanently delete. Admin only."""
+    if user.role != User.Roles.ADMIN:
+        raise PermissionDenied('Only administrators can permanently delete applications.')
+
+    _log_action(application, ApplicationAuditLog.Action.DELETED, user,
+                note=f'Deleted application #{application.pk} ({application.candidate.email} → {application.job.title})')
+    application.delete()
+
+
+@transaction.atomic
+def withdraw_application(application: Application, user: User) -> Application:
+    """Candidate withdraws their own application (only before in_review)."""
+    if application.candidate_id != user.pk:
+        raise PermissionDenied('You can only withdraw your own application.')
+    if application.status not in (Application.Status.PENDING, Application.Status.SHORTLISTED, Application.Status.INTERVIEW):
+        raise ValidationError('You can only withdraw applications that are still pending.')
+
+    old_status = application.status
+    application.status = Application.Status.WITHDRAWN
+    application.save(update_fields=['status', 'updated_at'])
+
+    _log_action(application, ApplicationAuditLog.Action.WITHDRAWN, user,
+                old_value=old_status, new_value='withdrawn')
+    return application
+
+
+@transaction.atomic
+def bulk_update_status(application_ids: list[int], new_status: str, user: User) -> int:
+    """Bulk status update for staff. Returns count of updated applications."""
+    allowed_roles = (User.Roles.ADMIN, User.Roles.HR_MANAGER, User.Roles.RECRUITER)
+    if user.role not in allowed_roles:
+        raise PermissionDenied('Insufficient permissions for bulk operations.')
+
+    apps = Application.objects.filter(pk__in=application_ids, is_archived=False)
+    updated = 0
+    for app in apps:
+        try:
+            validate_status_transition(app.status, new_status)
+        except ValidationError:
+            continue
+        if app.is_terminal:
+            continue
+        old = app.status
+        app.status = new_status
+        app.save(update_fields=['status', 'updated_at'])
+        _log_action(app, ApplicationAuditLog.Action.STATUS_CHANGE, user,
+                    old_value=old, new_value=new_status, note='Bulk action')
+        updated += 1
+    return updated
+
+
+@transaction.atomic
+def bulk_archive(application_ids: list[int], user: User) -> int:
+    """Bulk archive for Admin/HR. Returns count of archived applications."""
+    if user.role not in (User.Roles.ADMIN, User.Roles.HR_MANAGER):
+        raise PermissionDenied('Only admins and HR managers can archive applications.')
+
+    apps = Application.objects.filter(pk__in=application_ids, is_archived=False)
+    now = timezone.now()
+    count = 0
+    for app in apps:
+        app.is_archived = True
+        app.archived_by = user
+        app.archived_at = now
+        app.save(update_fields=['is_archived', 'archived_by', 'archived_at', 'updated_at'])
+        _log_action(app, ApplicationAuditLog.Action.ARCHIVED, user, note='Bulk archive')
+        count += 1
+    return count
+
+
+@transaction.atomic
+def bulk_delete(application_ids: list[int], user: User) -> int:
+    """Bulk permanent delete. Admin only."""
+    if user.role != User.Roles.ADMIN:
+        raise PermissionDenied('Only administrators can permanently delete applications.')
+
+    apps = Application.objects.filter(pk__in=application_ids)
+    count = 0
+    for app in apps:
+        _log_action(app, ApplicationAuditLog.Action.DELETED, user,
+                    note=f'Bulk deleted application #{app.pk}')
+        app.delete()
+        count += 1
+    return count
+
+
+def get_applications_queryset(user: User, include_archived: bool = False):
     """
     Role-scoped queryset:
-    - Candidate: only their own applications
-    - Recruiter/HR/Admin: all applications
+    - Candidate: only their own applications (non-withdrawn by default)
+    - Recruiter/HR/Admin: all applications (non-archived by default)
     """
     qs = Application.objects.select_related('candidate', 'job', 'job__created_by')
     if user.role == User.Roles.CANDIDATE:
         return qs.filter(candidate=user)
+    if not include_archived:
+        qs = qs.filter(is_archived=False)
     return qs
