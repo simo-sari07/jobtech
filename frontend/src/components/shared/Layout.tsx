@@ -25,6 +25,7 @@ export default function Layout({ title = 'Dashboard', subtitle }: LayoutProps) {
         <Topbar title={title} subtitle={subtitle} />
         <main className="flex-1 p-6 animate-fade-up">
           <Outlet />
+       
         </main>
       </div>
     </div>

@@ -18,6 +18,7 @@ export default function PublicFooter() {
                 className="h-13 w-auto object-contain transition-transform group-hover:scale-105"
               />
             </Link>
+            
             <p className="text-slate-500 text-sm leading-relaxed max-w-xs mb-6">
               The modern applicant tracking system designed to streamline your hiring process and elevate the candidate experience.
             </p>
